@@ -35,6 +35,19 @@ In **Vercel → the project that deploys this GitHub repo** (`kami-landing-page`
 
 Redeploy after changing env vars.
 
+### Point Store catalog (`/store`)
+
+The public store page loads published rewards from **`/api/published-store-rewards`**, which reads `public.point_store_rewards` with the **service role** and returns only public-safe fields (`status = published`, active date window, sorted by `points_cost` ascending).
+
+Uses the same Vercel env vars as password reset:
+
+| Name | Value |
+|------|--------|
+| **`SUPABASE_SERVICE_ROLE_KEY`** | Required for the store catalog API |
+| **`SUPABASE_URL`** | Optional. Defaults to `https://bscnpilzmilzabagnypx.supabase.co` |
+
+Optional SQL view (for future anon/RPC access): `supabase/migrations/20260531210000_published_point_store_rewards_view.sql`.
+
 ### Fallback file
 
 `assets/supabase-browser-public.js` can hold the same anon public key (safe to commit; RLS still applies). The page tries the API first, then uses this file if the API returns an empty `anonKey`.

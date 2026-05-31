@@ -88,6 +88,19 @@
     .reward-footer{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)}
     .points-cost{display:inline-flex;align-items:center;gap:8px;font-size:22px;font-weight:900;letter-spacing:-.03em;color:#fff}
     .points-cost img{width:22px;height:22px;object-fit:contain}
+    .partner-name{margin-top:10px;color:#9588aa;font-size:12px;line-height:1.45}
+    .reward-visual.fallback{display:grid;place-items:center}
+    .reward-visual.fallback i{width:54px;height:54px;color:rgba(255,255,255,.88);filter:drop-shadow(0 0 18px rgba(124,77,255,.35))}
+    .reward-visual.fallback.food{background:linear-gradient(135deg,rgba(120,72,36,.85),rgba(70,38,18,.92)),radial-gradient(circle at 70% 30%,rgba(255,180,90,.35),transparent 55%)}
+    .reward-visual.fallback.dinner{background:linear-gradient(135deg,rgba(92,34,58,.88),rgba(48,18,36,.92)),radial-gradient(circle at 30% 70%,rgba(255,120,160,.28),transparent 55%)}
+    .reward-visual.fallback.nightlife{background:linear-gradient(135deg,rgba(58,28,110,.92),rgba(18,10,42,.95)),radial-gradient(circle at 50% 50%,rgba(124,77,255,.35),transparent 60%)}
+    .reward-visual.fallback.wellness{background:linear-gradient(135deg,rgba(24,88,88,.88),rgba(12,42,52,.92)),radial-gradient(circle at 70% 30%,rgba(90,220,200,.25),transparent 55%)}
+    .reward-visual.fallback.fitness{background:linear-gradient(135deg,rgba(92,72,18,.9),rgba(48,36,8,.95)),radial-gradient(circle at 30% 40%,rgba(245,200,66,.28),transparent 55%)}
+    .reward-visual.fallback.experience{background:linear-gradient(135deg,rgba(28,52,120,.9),rgba(12,24,58,.95)),radial-gradient(circle at 60% 40%,rgba(110,168,255,.28),transparent 55%)}
+    .reward-visual.fallback.default{background:linear-gradient(135deg,rgba(58,28,110,.92),rgba(18,10,42,.95)),radial-gradient(circle at 50% 50%,rgba(124,77,255,.35),transparent 60%)}
+    .rewards-empty,.rewards-status{grid-column:1/-1;border:1px solid rgba(158,94,255,.24);border-radius:22px;padding:36px 28px;text-align:center;color:#c8bfd8;line-height:1.65;background:rgba(255,255,255,.03)}
+    .rewards-empty h3{margin:0 0 10px;color:#f3efff;font-size:22px;letter-spacing:-.03em}
+    .rewards-status{margin:0;color:#a9b0c8}
 
     .beta-note{margin:28px 0 0;padding:18px 20px;border-radius:18px;border:1px solid rgba(158,94,255,.24);background:rgba(255,255,255,.03);color:#b8afc8;font-size:14px;line-height:1.65;text-align:center}
 
@@ -155,90 +168,8 @@
         <p>Use your points for experiences, perks, and real-world rewards from Kami and local partners.</p>
       </div>
 
-      <div class="rewards-grid">
-        <article class="reward-card">
-          <div class="reward-visual">
-            <img src="assets/store/reward-coffee.jpg" alt="" loading="lazy" />
-            <div class="reward-badges"><span class="pill">Food &amp; Drink</span></div>
-          </div>
-          <div class="reward-body">
-            <h3>$25 Coffee / Food Credit</h3>
-            <p>Grab coffee, lunch, or a quick bite at selected local spots.</p>
-            <div class="reward-footer">
-              <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />2,500</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="reward-card">
-          <div class="reward-visual">
-            <img src="assets/store/reward-experience.jpg" alt="" loading="lazy" />
-            <div class="reward-badges"><span class="pill">Events &amp; Experiences</span></div>
-          </div>
-          <div class="reward-body">
-            <h3>Free Class or Local Experience</h3>
-            <p>Classes, events, and local experiences from Kami partners.</p>
-            <div class="reward-footer">
-              <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />5,000</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="reward-card">
-          <div class="reward-visual">
-            <img src="assets/store/reward-dinner.jpg" alt="" loading="lazy" />
-            <div class="reward-badges"><span class="pill">Food &amp; Drink</span></div>
-          </div>
-          <div class="reward-body">
-            <h3>$50 Dinner Credit</h3>
-            <p>Turn a good night into dinner on Kami.</p>
-            <div class="reward-footer">
-              <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />7,500</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="reward-card">
-          <div class="reward-visual">
-            <img src="assets/store/reward-wellness.jpg" alt="" loading="lazy" />
-            <div class="reward-badges"><span class="pill">Fitness &amp; Wellness</span></div>
-          </div>
-          <div class="reward-body">
-            <h3>Wellness4D Intro Session</h3>
-            <p>A wellness intro session with a local partner, subject to availability.</p>
-            <div class="reward-footer">
-              <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />10,000</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="reward-card">
-          <div class="reward-visual">
-            <img src="assets/store/reward-gym.jpg" alt="" loading="lazy" />
-            <div class="reward-badges"><span class="pill">Fitness</span></div>
-          </div>
-          <div class="reward-body">
-            <h3>Gold's Gym Month Pass</h3>
-            <p>Potential partner reward as the Austin catalog expands.</p>
-            <div class="reward-footer">
-              <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />15,000</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="reward-card">
-          <div class="reward-visual">
-            <img src="assets/store/reward-nightlife.jpg" alt="" loading="lazy" />
-            <div class="reward-badges"><span class="pill">Nightlife</span></div>
-          </div>
-          <div class="reward-body">
-            <h3>$100 Night Out Credit</h3>
-            <p>Use points toward a bigger night out with friends.</p>
-            <div class="reward-footer">
-              <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />20,000</span>
-            </div>
-          </div>
-        </article>
+      <div class="rewards-grid" id="rewards-grid" aria-live="polite">
+        <p class="rewards-status" id="rewards-status">Loading rewards…</p>
       </div>
 
       <p class="beta-note">The Kami Store is part of a limited beta rewards program. Points have no cash value, are non-transferable, and rewards are subject to availability, eligibility review, and change.</p>
@@ -284,6 +215,125 @@
     </div><div class="copyright">© 2026 Kami Social. All rights reserved.</div></footer>
 
   <script>lucide.createIcons({attrs:{strokeWidth:1.8}});</script>
+  <script>
+  (function(){
+    const grid = document.getElementById('rewards-grid');
+    if (!grid) return;
+
+    const CATEGORY_LABELS = {
+      food_drink: 'Food & Drink',
+      fitness_wellness: 'Fitness & Wellness',
+      fitness: 'Fitness',
+      nightlife: 'Nightlife',
+      events: 'Events',
+      services: 'Services',
+      other: 'Other'
+    };
+
+    const FALLBACK_BY_CATEGORY = {
+      food_drink: { className: 'food', icon: 'coffee' },
+      fitness_wellness: { className: 'wellness', icon: 'heart-pulse' },
+      fitness: { className: 'fitness', icon: 'dumbbell' },
+      nightlife: { className: 'nightlife', icon: 'martini' },
+      events: { className: 'experience', icon: 'ticket' },
+      services: { className: 'experience', icon: 'sparkles' },
+      other: { className: 'default', icon: 'gift' }
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatPoints(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return '0';
+      return n.toLocaleString('en-US');
+    }
+
+    function categoryLabel(category) {
+      const key = String(category || '').toLowerCase();
+      return CATEGORY_LABELS[key] || 'Reward';
+    }
+
+    function rewardDescription(reward) {
+      return reward.short_description || reward.subtitle || reward.description || '';
+    }
+
+    function fallbackForCategory(category) {
+      const key = String(category || '').toLowerCase();
+      return FALLBACK_BY_CATEGORY[key] || { className: 'default', icon: 'gift' };
+    }
+
+    function renderVisual(reward) {
+      const category = categoryLabel(reward.category);
+      const badge = '<div class="reward-badges"><span class="pill">' + escapeHtml(category) + '</span></div>';
+      if (reward.image_url) {
+        return '<div class="reward-visual">' +
+          badge +
+          '<img src="' + escapeHtml(reward.image_url) + '" alt="" loading="lazy" />' +
+          '</div>';
+      }
+      const fallback = fallbackForCategory(reward.category);
+      return '<div class="reward-visual fallback ' + escapeHtml(fallback.className) + '">' +
+        badge +
+        '<i data-lucide="' + escapeHtml(fallback.icon) + '" aria-hidden="true"></i>' +
+        '</div>';
+    }
+
+    function renderCard(reward) {
+      const description = rewardDescription(reward);
+      const partnerLine = reward.partner_name
+        ? '<p class="partner-name">With ' + escapeHtml(reward.partner_name) + '</p>'
+        : '';
+
+      return '<article class="reward-card">' +
+        renderVisual(reward) +
+        '<div class="reward-body">' +
+          '<h3>' + escapeHtml(reward.title) + '</h3>' +
+          (description ? '<p>' + escapeHtml(description) + '</p>' : '') +
+          partnerLine +
+          '<div class="reward-footer">' +
+            '<span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />' + escapeHtml(formatPoints(reward.points_cost)) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</article>';
+    }
+
+    function renderEmptyState() {
+      grid.innerHTML = '<div class="rewards-empty">' +
+        '<h3>Rewards are being added now.</h3>' +
+        '<p>Keep earning points — the catalog is coming online soon.</p>' +
+      '</div>';
+    }
+
+    async function loadRewards() {
+      try {
+        const response = await fetch('/api/published-store-rewards', { credentials: 'same-origin' });
+        const payload = await response.json().catch(function(){ return { rewards: [] }; });
+        const rewards = Array.isArray(payload.rewards) ? payload.rewards : [];
+
+        if (!rewards.length) {
+          renderEmptyState();
+          return;
+        }
+
+        grid.innerHTML = rewards.map(renderCard).join('');
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+          window.lucide.createIcons({ attrs: { strokeWidth: 1.8 } });
+        }
+      } catch (_error) {
+        renderEmptyState();
+      }
+    }
+
+    loadRewards();
+  })();
+  </script>
   <script>
   (function(){
     const toggle = document.querySelector('.mobile-menu-toggle');
