@@ -60,7 +60,6 @@
     .gradient-text{background:linear-gradient(135deg,var(--purple2),#6ea8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
     .store-hero .tagline{margin:16px 0 0;font-size:clamp(22px,3vw,34px);line-height:1.15;letter-spacing:-.04em;color:#f3efff}
     .store-hero .lede{margin:20px 0 0;color:#c8bfd8;font-size:18px;line-height:1.72;max-width:560px}
-    .activity-line{margin:18px 0 0;padding:14px 18px;border-radius:16px;border:1px solid rgba(158,94,255,.28);background:rgba(10,8,28,.55);color:#e8dcff;font-size:15px;line-height:1.6;font-weight:650}
     .hero-actions{display:flex;flex-wrap:wrap;gap:16px;margin-top:32px}
     .points-card{border:1px solid rgba(158,94,255,.34);border-radius:24px;padding:28px;background:linear-gradient(180deg,rgba(16,10,40,.82),rgba(8,6,24,.78));box-shadow:var(--shadow);backdrop-filter:blur(14px)}
     .points-card-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
@@ -78,25 +77,15 @@
 
     .rewards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
     .reward-card{border:1px solid rgba(158,94,255,.24);border-radius:22px;overflow:hidden;background:linear-gradient(180deg,rgba(18,12,42,.88),rgba(8,6,24,.82));box-shadow:0 18px 50px rgba(0,0,0,.24);display:flex;flex-direction:column;min-height:100%}
-    .reward-visual{position:relative;height:180px;overflow:hidden;display:grid;place-items:center}
-    .reward-visual i{width:54px;height:54px;color:rgba(255,255,255,.88);filter:drop-shadow(0 0 18px rgba(124,77,255,.35))}
-    .reward-visual.food{background:linear-gradient(135deg,rgba(120,72,36,.85),rgba(70,38,18,.92)),radial-gradient(circle at 70% 30%,rgba(255,180,90,.35),transparent 55%)}
-    .reward-visual.dinner{background:linear-gradient(135deg,rgba(92,34,58,.88),rgba(48,18,36,.92)),radial-gradient(circle at 30% 70%,rgba(255,120,160,.28),transparent 55%)}
-    .reward-visual.nightlife{background:linear-gradient(135deg,rgba(58,28,110,.92),rgba(18,10,42,.95)),radial-gradient(circle at 50% 50%,rgba(124,77,255,.35),transparent 60%)}
-    .reward-visual.wellness{background:linear-gradient(135deg,rgba(24,88,88,.88),rgba(12,42,52,.92)),radial-gradient(circle at 70% 30%,rgba(90,220,200,.25),transparent 55%)}
-    .reward-visual.fitness{background:linear-gradient(135deg,rgba(92,72,18,.9),rgba(48,36,8,.95)),radial-gradient(circle at 30% 40%,rgba(245,200,66,.28),transparent 55%)}
-    .reward-visual.experience{background:linear-gradient(135deg,rgba(28,52,120,.9),rgba(12,24,58,.95)),radial-gradient(circle at 60% 40%,rgba(110,168,255,.28),transparent 55%)}
-    .reward-badges{position:absolute;top:14px;left:14px;display:flex;flex-wrap:wrap;gap:8px}
-    .pill,.type-pill{display:inline-flex;align-items:center;padding:6px 11px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
-    .pill{background:rgba(8,6,20,.72);border:1px solid rgba(255,255,255,.14);color:#f3efff}
-    .pill.partner{border-color:rgba(245,200,66,.42);color:#ffe7a0}
+    .reward-visual{position:relative;height:180px;overflow:hidden;background:#120f24}
+    .reward-visual img{width:100%;height:100%;object-fit:cover;display:block}
+    .reward-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,4,13,.08),rgba(5,4,13,.42))}
+    .reward-badges{position:absolute;top:14px;left:14px;z-index:1;display:flex;flex-wrap:wrap;gap:8px}
+    .pill{display:inline-flex;align-items:center;padding:6px 11px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;background:rgba(8,6,20,.72);border:1px solid rgba(255,255,255,.14);color:#f3efff}
     .reward-body{padding:22px;display:flex;flex-direction:column;flex:1}
     .reward-body h3{margin:0 0 8px;font-size:20px;line-height:1.15;letter-spacing:-.03em}
     .reward-body p{margin:0;color:#c8bfd8;font-size:14px;line-height:1.58;flex:1}
-    .reward-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)}
-    .type-pill{border:1px solid rgba(158,94,255,.28);background:rgba(124,77,255,.12);color:#d8baff}
-    .type-pill.partner{border-color:rgba(245,200,66,.34);background:rgba(245,200,66,.1);color:#ffe7a0}
-    .type-pill.target{border-color:rgba(169,176,200,.28);background:rgba(255,255,255,.05);color:#c8bfd8}
+    .reward-footer{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)}
     .points-cost{display:inline-flex;align-items:center;gap:8px;font-size:22px;font-weight:900;letter-spacing:-.03em;color:#fff}
     .points-cost img{width:22px;height:22px;object-fit:contain}
 
@@ -113,23 +102,17 @@
     .step-card p{margin:0;color:#c8bfd8;font-size:14px;line-height:1.55}
     .step-more{margin-top:18px;padding-top:18px;border-top:1px dashed rgba(255,255,255,.12);color:#b8afc8;font-size:14px;font-weight:700;text-align:center}
 
-    .store-cta{display:grid;grid-template-columns:1fr auto;gap:22px;align-items:center;padding:30px;border-radius:26px;border:1px solid rgba(158,94,255,.36);background:linear-gradient(135deg,rgba(101,54,230,.34),rgba(75,124,255,.12));margin:28px 0 8px}
-    .store-cta h3{margin:0 0 8px;font-size:26px;letter-spacing:-.04em}
-    .store-cta p{margin:0;color:#c8bfd8;line-height:1.6}
-
     @media(max-width:980px){
       .store-hero{min-height:auto}
       .store-hero-content{grid-template-columns:1fr;padding:48px 0 40px;gap:28px}
       .points-card{max-width:520px}
       .rewards-grid{grid-template-columns:repeat(2,1fr)}
       .steps-grid{grid-template-columns:repeat(2,1fr)}
-      .store-cta{grid-template-columns:1fr}
     }
     @media(max-width:640px){
       .rewards-grid,.steps-grid{grid-template-columns:1fr}
       .hero-actions{flex-direction:column}
       .hero-actions .btn{width:100%}
-      .store-cta .btn{width:100%}
     }
   </style>
 </head>
@@ -144,7 +127,6 @@
         <div class="eyebrow">Kami Store</div>
         <h1>Turn points into <span class="gradient-text">real-world rewards.</span></h1>
         <p class="lede">Earn points by going places, joining events, connecting with others, inviting friends, and more. Redeem them for food, fitness, wellness, events, and local perks as Kami grows.</p>
-        <p class="activity-line">Go places. Join events. Connect with others. Invite friends. And more.</p>
         <div class="hero-actions">
           <a class="btn" href="index.html#download"><i data-lucide="smartphone" aria-hidden="true"></i> Start earning in Kami</a>
           <a class="btn secondary" href="#rewards">See rewards</a>
@@ -176,91 +158,85 @@
 
       <div class="rewards-grid">
         <article class="reward-card">
-          <div class="reward-visual food">
+          <div class="reward-visual">
+            <img src="assets/store/reward-coffee.jpg" alt="" loading="lazy" />
             <div class="reward-badges"><span class="pill">Food &amp; Drink</span></div>
-            <i data-lucide="coffee" aria-hidden="true"></i>
           </div>
           <div class="reward-body">
             <h3>$25 Coffee / Food Credit</h3>
             <p>Grab coffee, lunch, or a quick bite at selected local spots.</p>
             <div class="reward-footer">
-              <span class="type-pill">Kami-funded</span>
               <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />2,500</span>
             </div>
           </div>
         </article>
 
         <article class="reward-card">
-          <div class="reward-visual dinner">
+          <div class="reward-visual">
+            <img src="assets/store/reward-experience.jpg" alt="" loading="lazy" />
+            <div class="reward-badges"><span class="pill">Events &amp; Experiences</span></div>
+          </div>
+          <div class="reward-body">
+            <h3>Free Class or Local Experience</h3>
+            <p>Classes, events, and local experiences from Kami partners.</p>
+            <div class="reward-footer">
+              <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />5,000</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="reward-card">
+          <div class="reward-visual">
+            <img src="assets/store/reward-dinner.jpg" alt="" loading="lazy" />
             <div class="reward-badges"><span class="pill">Food &amp; Drink</span></div>
-            <i data-lucide="utensils" aria-hidden="true"></i>
           </div>
           <div class="reward-body">
             <h3>$50 Dinner Credit</h3>
             <p>Turn a good night into dinner on Kami.</p>
             <div class="reward-footer">
-              <span class="type-pill">Kami-funded</span>
               <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />7,500</span>
             </div>
           </div>
         </article>
 
         <article class="reward-card">
-          <div class="reward-visual nightlife">
-            <div class="reward-badges"><span class="pill">Nightlife</span></div>
-            <i data-lucide="martini" aria-hidden="true"></i>
-          </div>
-          <div class="reward-body">
-            <h3>$100 Night Out Credit</h3>
-            <p>Use points toward a bigger night out with friends.</p>
-            <div class="reward-footer">
-              <span class="type-pill">Kami-funded</span>
-              <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />20,000</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="reward-card">
-          <div class="reward-visual wellness">
-            <div class="reward-badges"><span class="pill partner">Fitness &amp; Wellness</span></div>
-            <i data-lucide="heart-pulse" aria-hidden="true"></i>
+          <div class="reward-visual">
+            <img src="assets/store/reward-wellness.jpg" alt="" loading="lazy" />
+            <div class="reward-badges"><span class="pill">Fitness &amp; Wellness</span></div>
           </div>
           <div class="reward-body">
             <h3>Wellness4D Intro Session</h3>
             <p>A wellness intro session with a local partner, subject to availability.</p>
             <div class="reward-footer">
-              <span class="type-pill partner">Partner reward</span>
               <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />10,000</span>
             </div>
           </div>
         </article>
 
         <article class="reward-card">
-          <div class="reward-visual fitness">
-            <div class="reward-badges"><span class="pill partner">Fitness</span></div>
-            <i data-lucide="dumbbell" aria-hidden="true"></i>
+          <div class="reward-visual">
+            <img src="assets/store/reward-gym.jpg" alt="" loading="lazy" />
+            <div class="reward-badges"><span class="pill">Fitness</span></div>
           </div>
           <div class="reward-body">
             <h3>Gold's Gym Month Pass</h3>
             <p>Potential partner reward as the Austin catalog expands.</p>
             <div class="reward-footer">
-              <span class="type-pill target">Partner target</span>
               <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />15,000</span>
             </div>
           </div>
         </article>
 
         <article class="reward-card">
-          <div class="reward-visual experience">
-            <div class="reward-badges"><span class="pill partner">Events &amp; Experiences</span></div>
-            <i data-lucide="ticket" aria-hidden="true"></i>
+          <div class="reward-visual">
+            <img src="assets/store/reward-nightlife.jpg" alt="" loading="lazy" />
+            <div class="reward-badges"><span class="pill">Nightlife</span></div>
           </div>
           <div class="reward-body">
-            <h3>Free Class or Local Experience</h3>
-            <p>Classes, events, and local experiences from Kami partners.</p>
+            <h3>$100 Night Out Credit</h3>
+            <p>Use points toward a bigger night out with friends.</p>
             <div class="reward-footer">
-              <span class="type-pill partner">Partner reward</span>
-              <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />5,000</span>
+              <span class="points-cost"><img src="assets/k-mark-transparent.png" alt="" />20,000</span>
             </div>
           </div>
         </article>
@@ -298,14 +274,6 @@
         </article>
       </div>
       <p class="step-more">And more as Kami grows</p>
-    </section>
-
-    <section class="store-cta" aria-label="Download Kami">
-      <div>
-        <h3>The adventure starts in the app.</h3>
-        <p>Download Kami to start earning points and unlock rewards as the catalog grows.</p>
-      </div>
-      <a class="btn" href="index.html#download">Download Kami</a>
     </section>
   </main>
 
