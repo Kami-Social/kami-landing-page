@@ -457,7 +457,7 @@ function startApkDownload(url) {
 
 async function loadLatestApk() {
   try {
-    const repo = "BDecker19/kami-android-test-versions";
+    const repo = "KamiSocial/kami-android-test-versions";
 
     const response = await fetch(`https://api.github.com/repos/${repo}/releases`, {
       headers: { "Accept": "application/vnd.github+json" }
@@ -525,7 +525,7 @@ async function loadLatestApk() {
     if (versionEl) versionEl.textContent = "No APK release found";
     if (sizeEl) sizeEl.textContent = "check GitHub release";
     if (downloadEl) {
-      downloadEl.href = "https://github.com/BDecker19/kami-android-test-versions/releases";
+      downloadEl.href = "https://github.com/KamiSocial/kami-android-test-versions/releases";
       downloadEl.target = "_blank";
       downloadEl.rel = "noopener";
     }
