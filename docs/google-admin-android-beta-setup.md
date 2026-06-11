@@ -119,27 +119,19 @@ npm install
 npx vercel dev
 ```
 
-### Temporary Google Group test endpoint
+### Android beta signup (preview or production)
 
-`POST /api/test-google-group` — adds an email directly to the group (no Supabase). **Remove or protect before long-term production.**
+Use the real signup endpoint (Supabase capture + Google Group enrollment):
 
-**Preview deployment** (replace with your Vercel preview URL):
-
-```bash
-curl -X POST "https://YOUR-PREVIEW-URL.vercel.app/api/test-google-group" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"you@example.com"}'
-```
-
-**Production** (after deploy):
+**Preview** (replace with your Vercel preview URL):
 
 ```bash
-curl -X POST "https://www.kamisocial.com/api/test-google-group" \
+curl -X POST "https://YOUR-PREVIEW-URL.vercel.app/api/beta/android" \
   -H "Content-Type: application/json" \
-  -d '{"email":"you@example.com"}'
+  -d '{"email":"you@example.com","source":"website"}'
 ```
 
-**Android beta signup** (full flow with optional Supabase capture):
+**Production**:
 
 ```bash
 curl -X POST "https://www.kamisocial.com/api/beta/android" \
@@ -147,7 +139,7 @@ curl -X POST "https://www.kamisocial.com/api/beta/android" \
   -d '{"email":"you@example.com","source":"website"}'
 ```
 
-Then POST to `http://localhost:3000/api/test-google-group` with the same env vars in a local `.env` file (gitignored).
+For local function testing, run `npx vercel dev` with Google (and optional Supabase) env vars in a gitignored `.env` file, then POST to `http://localhost:3000/api/beta/android`.
 
 ## Troubleshooting
 
