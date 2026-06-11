@@ -63,21 +63,32 @@ module.exports = async function androidBetaSignup(req, res) {
     return;
   }
 
-  const stored = await storeBetaSignup(email, "android", source);
-  if (!stored.ok) {
-    sendJson(res, 500, { success: false, error: stored.error });
-    return;
+  const storage = await storeBetaSignup(email, "android", source);
+  if (storage.stored) {
+    console.info("[android-beta] signup captured", {
+      duplicate: Boolean(storage.duplicate),
+    });
+  } else if (storage.skipped) {
+    console.info("[android-beta] supabase storage skipped (no service key)");
+  } else {
+    console.error("[android-beta] supabase storage failed; continuing with google group", {
+      errorCode: storage.errorCode,
+      errorMessage: storage.errorMessage,
+      errorDetails: storage.errorDetails,
+    });
   }
-
-  console.info("[android-beta] signup captured", {
-    supabaseSkipped: Boolean(stored.skipped),
-    duplicate: Boolean(stored.duplicate),
-  });
 
   const added = await addAndroidBetaGroupMember(email);
   if (!added.ok) {
     sendJson(res, 500, { success: false, error: added.error });
     return;
+  }
+
+  if (!storage.stored && !storage.skipped) {
+    console.warn("[android-beta] google group succeeded but supabase row missing", {
+      emailDomain: email.includes("@") ? email.split("@")[1] : "invalid",
+      errorCode: storage.errorCode,
+    });
   }
 
   sendJson(res, 200, {

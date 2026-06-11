@@ -7,7 +7,7 @@
 **Flow:**
 
 1. Validate and normalize email (lowercase).
-2. Insert into Supabase `beta_signups` when `SUPABASE_SERVICE_ROLE_KEY` is configured (skipped if not).
+2. Insert into Supabase `beta_signups` when `SUPABASE_SERVICE_ROLE_KEY` is configured (skipped if not). Storage failures are logged but do not block step 3.
 3. Add member to Google Group via Admin SDK (`GOOGLE_ANDROID_BETA_GROUP_EMAIL`, default `android-beta@kamisocial.com`).
 4. Return JSON `{ success: true, message: "..." }`.
 
@@ -21,25 +21,9 @@
 
 Store signup and optional TestFlight invite queue.
 
-## Supabase table (recommended)
+## Supabase table
 
-Run in Supabase SQL editor when ready to persist signups:
-
-```sql
-create table public.beta_signups (
-  id uuid primary key default gen_random_uuid(),
-  email text not null,
-  platform text not null check (platform in ('android', 'ios')),
-  source text not null default 'website',
-  created_at timestamptz not null default now()
-);
-
-create unique index beta_signups_email_platform_idx
-  on public.beta_signups (lower(trim(email)), platform);
-
-alter table public.beta_signups enable row level security;
--- Inserts via service-role API only; no public read policy.
-```
+Migration: `supabase/migrations/20260611150000_beta_signups.sql`
 
 | Field        | Type        | Notes                                      |
 | ------------ | ----------- | ------------------------------------------ |
@@ -49,7 +33,7 @@ alter table public.beta_signups enable row level security;
 | `source`     | text        | Default `website`                          |
 | `created_at` | timestamptz | Server default `now()`                     |
 
-If `SUPABASE_SERVICE_ROLE_KEY` is not set, storage is skipped and signup proceeds to Google Group add. If it is set but insert fails (other than duplicate email), the request fails before the Google step.
+If `SUPABASE_SERVICE_ROLE_KEY` is not set, storage is skipped and signup proceeds to Google Group add. If it is set but insert fails (other than duplicate email), the failure is logged and signup still proceeds to Google Group add.
 
 ## Environment variables (Android)
 
