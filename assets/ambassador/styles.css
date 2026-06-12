@@ -451,6 +451,41 @@ th { color: #dce3fb; font-size: 12px; text-transform: uppercase; letter-spacing:
   border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px;
   padding: 16px; margin-bottom: 12px; background: rgba(255, 255, 255, 0.03);
 }
+.history-collapsible { margin-top: 4px; }
+.history-collapsible-summary {
+  list-style: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #e4d7ff;
+  letter-spacing: -0.03em;
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+.history-collapsible-summary::-webkit-details-marker { display: none; }
+.history-collapsible-summary::marker { content: ""; }
+.history-collapsible-summary::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid #e4d7ff;
+  border-bottom: 2px solid #e4d7ff;
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+  margin-top: -2px;
+}
+.history-collapsible[open] .history-collapsible-summary::before {
+  transform: rotate(45deg);
+  margin-top: 2px;
+}
+.history-collapsible-summary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.22);
+  border-radius: 6px;
+}
 .btn-danger-outline {
   border-color: rgba(255, 107, 140, 0.55);
   color: #ffb8c9;

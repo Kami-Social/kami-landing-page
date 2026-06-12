@@ -659,8 +659,10 @@ async function renderDashboard() {
       <h2>Agreement History</h2>
       <h3>Current Agreement</h3>
       ${currentAgreementHtml}
-      <h3>Historical Agreements</h3>
-      ${historicalHtml}
+      <details class="history-collapsible">
+        <summary class="history-collapsible-summary">Historical Agreements${historical.length ? ` (${historical.length})` : ""}</summary>
+        ${historicalHtml}
+      </details>
     </section>
 
     <section class="panel">
