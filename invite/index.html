@@ -73,7 +73,7 @@
       grid-template-columns: minmax(0, 1.04fr) minmax(350px, 0.92fr);
       gap: 58px;
       align-items: center;
-      padding: 50px 0 74px;
+      padding: 50px 0 74px 2%;
       border-bottom: 1px solid var(--line);
     }
     .invite-pill {
@@ -98,26 +98,46 @@
     .inviter strong { color:#c084fc; }
     .store-row { display:flex; gap:18px; flex-wrap:wrap; margin:30px 0 24px; }
     .download-cta {
-      display:inline-flex;align-items:center;justify-content:center;min-width:245px;min-height:78px;border-radius:12px;padding:13px 28px;
-      border:1px solid rgba(216,180,254,.82);background:transparent;color:#fff;text-decoration:none;
-      font-size:20px;font-weight:750;letter-spacing:-.02em;
-      transition:transform .18s ease,background .18s ease,border-color .18s ease;
+      display:inline-flex;align-items:center;justify-content:center;gap:14px;min-width:260px;min-height:78px;border-radius:14px;padding:14px 28px 14px 22px;
+      border:1px solid rgba(188,158,255,.42);
+      background:
+        linear-gradient(135deg, rgba(124,77,255,.14) 0%, rgba(49,94,255,.06) 52%, rgba(255,255,255,.02) 100%);
+      backdrop-filter:blur(14px);
+      color:#fff;text-decoration:none;
+      font-size:20px;font-weight:800;letter-spacing:-.025em;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.04) inset,
+        0 1px 0 rgba(255,255,255,.08) inset,
+        0 18px 48px rgba(87,73,255,.18),
+        0 0 42px rgba(139,92,246,.12);
+      transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease,background .2s ease;
     }
-    .download-cta:hover{transform:translateY(-2px);background:rgba(255,255,255,.04);border-color:rgba(216,180,254,1)}
+    .download-cta-mark{
+      width:34px;height:38px;object-fit:contain;flex:0 0 34px;
+      filter:drop-shadow(0 0 16px rgba(124,77,255,.75));
+    }
+    .download-cta:hover{
+      transform:translateY(-2px);
+      border-color:rgba(216,180,254,.72);
+      background:
+        linear-gradient(135deg, rgba(124,77,255,.22) 0%, rgba(49,94,255,.1) 52%, rgba(255,255,255,.04) 100%);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.06) inset,
+        0 1px 0 rgba(255,255,255,.12) inset,
+        0 22px 56px rgba(87,73,255,.28),
+        0 0 56px rgba(139,92,246,.22);
+    }
     .open{color:var(--muted);font-size:17px}
     .open a{color:#b56cff;text-decoration:none;font-weight:650}
-    .phone-wrap{display:flex;justify-content:center;align-items:center;position:relative}
-    .phone-wrap::before{content:"";position:absolute;width:430px;height:650px;border-radius:60px;background:radial-gradient(circle,rgba(139,92,246,.48),transparent 58%);filter:blur(18px);transform:translateY(8px);z-index:0}
-    .phone-preview-img{position:relative;z-index:1;width:min(440px,100%);height:auto;display:block;filter:drop-shadow(0 32px 90px rgba(109,66,255,.38))}
+    .phone-wrap{display:flex;justify-content:center;align-items:center;position:relative;transform:translateX(-10%)}
+    .phone-wrap::before{content:"";position:absolute;width:301px;height:455px;border-radius:42px;background:radial-gradient(circle,rgba(139,92,246,.48),transparent 58%);filter:blur(18px);transform:translateY(8px);z-index:0}
+    .phone-preview-img{position:relative;z-index:1;width:min(308px,100%);height:auto;display:block;filter:drop-shadow(0 32px 90px rgba(109,66,255,.38))}
     .features{padding:54px 0 48px;text-align:center}
     h2{font-size:clamp(28px,4vw,38px);margin:0 0 44px;letter-spacing:-.045em}
     .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);max-width:980px;margin:0 auto}
     .feature{padding:0 46px;border-right:1px solid rgba(255,255,255,.14)}
     .feature:last-child{border-right:0}
-    .feature-icon{width:82px;height:82px;border-radius:999px;margin:0 auto 20px;display:grid;place-items:center;background:rgba(139,92,246,.16);border:1px solid currentColor;color:#b88cff}
-    .feature.people .feature-icon{color:#b88cff;background:rgba(139,92,246,.16)}
-    .feature.events .feature-icon{color:#9aa3b2;background:rgba(255,255,255,.06)}
-    .feature.places .feature-icon{color:#fff;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.35)}
+    .feature-icon{width:82px;height:82px;border-radius:999px;margin:0 auto 20px;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(154,163,178,.55);color:#9aa3b2}
     .feature h3{font-size:24px;margin:0 0 12px;letter-spacing:-.035em}
     .feature p{color:var(--muted);font-size:17px;line-height:1.55;margin:0}
     .icon-svg{width:38px;height:38px;display:block;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -134,7 +154,7 @@
     footer a{display:block;margin:9px 0;text-decoration:none}
     .copyright{text-align:center;color:#778099;margin-top:36px}
     @media(max-width:980px){
-      .hero{grid-template-columns:1fr;gap:38px}.feature-grid,.trust{grid-template-columns:1fr}
+      .hero{grid-template-columns:1fr;gap:38px;padding-left:0}.phone-wrap{transform:none}.feature-grid,.trust{grid-template-columns:1fr}
       .feature,.trust-card{border-right:0;border-bottom:1px solid rgba(255,255,255,.12)}
       .feature{padding:28px 20px}.nav-links,.site-nav .btn{display:none}
     }
@@ -283,7 +303,10 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
           <div><strong id="invite-name">Loading</strong> invited you to join Kami<br />Discover events, places, and real-time activity in your immediate vicinity.</div>
         </div>
         <div class="store-row">
-          <a class="download-cta" href="/#download">Download Kami</a>
+          <a class="download-cta" href="/#download">
+            <img class="download-cta-mark" src="../assets/k-mark-transparent.png" alt="" aria-hidden="true" />
+            <span>Download Kami</span>
+          </a>
         </div>
         <div class="open">Already have the app? <a id="open-kami" href="kami://invite/benji">Open Kami →</a></div>
       </section>
