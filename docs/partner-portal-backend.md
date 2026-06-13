@@ -4,7 +4,9 @@ The public partner portal at `/partner` uses Supabase Auth plus self-service RPC
 
 ## Deploy checklist
 
-1. Apply migration `supabase/migrations/20260613120000_partner_portal.sql` to the Kami Supabase project. **Already applied to production** (2026-06-13); re-run only on staging/other projects.
+1. Apply migrations to the Kami Supabase project (in order):
+   - `supabase/migrations/20260613120000_partner_portal.sql`
+   - `supabase/migrations/20260613190000_partner_program_parameters_auth_hardening.sql` — **required before external partner testing** (revokes anon execute on program parameters RPC; enforces partner membership)
 2. On the **kami-landing-page** Vercel project, set:
    - `SUPABASE_ANON_KEY` (or use `assets/supabase-browser-public.js`)
    - `SUPABASE_SERVICE_ROLE_KEY` (server-only; used by `/api/partner/*` for password reset)
@@ -24,7 +26,7 @@ The public partner portal at `/partner` uses Supabase Auth plus self-service RPC
 | `get_my_partner_dashboard` | Header, venues[], readiness, referral link, program terms |
 | `get_my_partner_events` | Upcoming events across all linked venues |
 | `accept_my_partner_agreement` | Stores agreement snapshot (requires `p_partner_id`) |
-| `kami_build_partner_program_parameters` | Program copy + partner-specific rates (internal helper) |
+| `kami_build_partner_program_parameters` | Program copy + partner-specific rates (authenticated partner members only) |
 
 ## RPCs (public / anon)
 
