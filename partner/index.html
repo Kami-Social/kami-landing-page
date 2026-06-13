@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kami Partner Portal</title>
+  <meta name="description" content="Approved Kami partners can log in to view linked venues, referral links, program terms, and upcoming events." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="../assets/k-mark-transparent.png" type="image/png" sizes="any" />
+  <link rel="stylesheet" href="../assets/partner/styles.css" />
+  <script src="../assets/supabase-browser-public.js"></script>
+</head>
+<body>
+  <nav>
+    <div class="nav-inner">
+      <a href="/" aria-label="Kami home">
+        <img class="wordmark-img" src="../assets/logo-wordmark.png" alt="Kami" />
+      </a>
+      <a class="nav-link" href="/">Back to Kami</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div id="partner-root" class="partner-boot-loading amb-boot-loading" aria-live="polite" aria-busy="true">
+      <section class="panel boot-panel">
+        <p class="boot-text" role="status">Loading partner portal…</p>
+      </section>
+    </div>
+  </main>
+
+  <div id="partner-modal" class="amb-modal partner-modal" hidden>
+    <div class="amb-modal-backdrop partner-modal-backdrop" aria-hidden="true"></div>
+    <div class="amb-modal-card" role="dialog" aria-modal="true" aria-labelledby="partner-modal-title">
+      <button type="button" class="amb-modal-close" id="partner-modal-close" aria-label="Close">×</button>
+      <h2 id="partner-modal-title"></h2>
+      <div id="partner-modal-body"></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© Kami Social · <a href="mailto:partners@kamisocial.com">partners@kamisocial.com</a></p>
+  </footer>
+
+  <script type="module" src="../assets/partner/app.js"></script>
+</body>
+</html>

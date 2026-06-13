@@ -35,6 +35,10 @@
     {
       "source": "/ambassador",
       "destination": "/ambassador/index.html"
+    },
+    {
+      "source": "/partner",
+      "destination": "/partner/index.html"
     }
   ],
   "redirects": [
