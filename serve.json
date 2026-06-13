@@ -10,6 +10,7 @@
     { "source": "/ambassador", "destination": "/ambassador/index.html" }
   ],
   "redirects": [
+    { "source": "/download", "destination": "/#download", "type": 301 },
     { "source": "/privacy.html", "destination": "/privacy", "type": 301 },
     { "source": "/terms.html", "destination": "/terms", "type": 301 },
     { "source": "/how-it-works.html", "destination": "/how-it-works", "type": 301 },
