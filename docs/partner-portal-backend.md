@@ -47,6 +47,7 @@ The public partner portal at `/partner` uses Supabase Auth plus self-service RPC
 | Route | Notes |
 |-------|------|
 | `POST /api/partner/forgot-password` | Validates partner membership, sends reset link |
+| `POST /api/partner/inquiry` | Partner program inquiry form → email to partners@kamisocial.com (requires `RESEND_API_KEY`) |
 | `POST /api/partner/accept-agreement` | Forwards to RPC; captures IP + User-Agent |
 
 ## Agreement versioning

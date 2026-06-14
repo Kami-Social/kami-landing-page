@@ -8,6 +8,11 @@ import {
   renderAgreementTermsSummary,
   renderProgramTermsCard,
 } from "./terms-summary.js";
+import {
+  renderPublicLandingHTML,
+  wirePublicLanding,
+  clearPublicLandingMode,
+} from "./public-landing.js";
 import { getAgreement, getCurrentAgreementText } from "./agreements/index.js";
 
 const ROOT = document.getElementById("partner-root");
@@ -64,10 +69,15 @@ async function initSupabase() {
   return supabase;
 }
 
-function setRoot(html) {
+function setRoot(html, { publicLanding = false } = {}) {
   if (!ROOT) return;
   ROOT.classList.remove("partner-boot-loading");
   ROOT.removeAttribute("aria-busy");
+  if (publicLanding) {
+    document.body.classList.add("partner-is-public");
+  } else {
+    clearPublicLandingMode();
+  }
   ROOT.innerHTML = html;
 }
 
@@ -126,42 +136,32 @@ function showForgotPasswordResult(code, message) {
   showKamiDialog({ title, message: msg, variant });
 }
 
+function hasLikelyStoredSession() {
+  return typeof window.kamiHasLikelyStoredSession === "function" && window.kamiHasLikelyStoredSession();
+}
+
 function renderPublicShell({ misconfigured = false } = {}) {
-  const misconfiguredHtml = misconfigured
-    ? `<div class="msg err">This page could not load Supabase configuration. Set <strong>SUPABASE_ANON_KEY</strong> on the Vercel project or add the anon key to <code>assets/supabase-browser-public.js</code>.</div>`
-    : "";
+  const landingReady = Boolean(ROOT?.querySelector(".partner-land"));
 
-  setRoot(`
-    <section class="hero-block">
-      <img class="hero-logo" src="/assets/k-mark-transparent.png" alt="Kami" width="72" height="72" />
-      <div class="eyebrow">Kami Partner Program</div>
-      <h1>Your venues on Kami.</h1>
-      <p class="hero-copy">Log in to view your linked venues, referral link, and program status.</p>
-    </section>
-    <section class="panel login-panel">
-      <h2>Partner Login</h2>
-      ${misconfiguredHtml}
-      <form id="login-form" class="stack-form" novalidate>
-        <label for="login-email">Email</label>
-        <input id="login-email" type="email" autocomplete="email" required />
-        <label for="login-password">Password</label>
-        <input id="login-password" type="password" autocomplete="current-password" required />
-        <div id="login-error" class="msg err" hidden role="alert"></div>
-        <button class="btn" type="submit" id="login-submit">Log in</button>
-      </form>
-      <p class="helper-row"><button type="button" class="text-link" id="forgot-password">Forgot password?</button></p>
-      <p class="helper-row">Questions? Contact <a href="mailto:partners@kamisocial.com">partners@kamisocial.com</a></p>
-    </section>
-  `);
+  if (misconfigured || !landingReady) {
+    setRoot(renderPublicLandingHTML({ misconfigured }), { publicLanding: true });
+  } else {
+    ROOT.classList.remove("partner-boot-loading");
+    ROOT.removeAttribute("aria-busy");
+    document.body.classList.add("partner-is-public");
+    const footer = document.getElementById("partner-public-footer");
+    if (footer) footer.hidden = false;
+  }
 
-  wirePublicForm();
+  wirePublicLanding({ wireLoginForm: wirePublicForm });
 }
 
 function wirePublicForm() {
   const form = document.getElementById("login-form");
   const err = document.getElementById("login-error");
   const forgot = document.getElementById("forgot-password");
-  if (!form || !supabase) return;
+  if (!form || !supabase || form.dataset.loginWired) return;
+  form.dataset.loginWired = "1";
 
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
@@ -711,12 +711,18 @@ async function logout() {
 }
 
 (async function main() {
+  const likelyLoggedIn = hasLikelyStoredSession();
+  if (!likelyLoggedIn) {
+    renderPublicShell();
+  }
+
   const client = await initSupabase();
   if (!client) return;
 
   const { data } = await client.auth.getSession();
   if (data?.session) await bootstrapSession();
-  else renderPublicShell();
+  else if (likelyLoggedIn) renderPublicShell();
+  else wirePublicForm();
 
   client.auth.onAuthStateChange((event, session) => {
     if (event === "INITIAL_SESSION") return;

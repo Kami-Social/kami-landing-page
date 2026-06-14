@@ -627,12 +627,20 @@ async function renderDashboard() {
     <section class="panel">
       <h2>Referral Link</h2>
       <div class="copy-grid">
-        <div><label>Referral Code</label><p class="copy-value" id="ref-code">${escapeHtml(referral.code || "—")}</p></div>
-        <div><label>Referral Link</label>${referralLinkHtml}</div>
-      </div>
-      <div class="btn-row">
-        <button type="button" class="btn secondary" id="copy-code">Copy Code</button>
-        <button type="button" class="btn secondary" id="copy-link">Copy Link</button>
+        <div>
+          <label>Referral Code</label>
+          <p class="copy-value" id="ref-code">${escapeHtml(referral.code || "—")}</p>
+          <div class="btn-row">
+            <button type="button" class="btn secondary" id="copy-code">Copy Code</button>
+          </div>
+        </div>
+        <div>
+          <label>Referral Link</label>
+          ${referralLinkHtml}
+          <div class="btn-row">
+            <button type="button" class="btn secondary" id="copy-link">Copy Link</button>
+          </div>
+        </div>
       </div>
       <p class="helper-row">Share your referral link with people you think would enjoy Kami. Qualified Referrals are determined by the current qualification criteria shown below.</p>
     </section>

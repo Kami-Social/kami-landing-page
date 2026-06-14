@@ -3,30 +3,68 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kami Partner Portal</title>
-  <meta name="description" content="Approved Kami partners can log in to view linked venues, referral links, program terms, and upcoming events." />
-  <meta name="robots" content="noindex, nofollow" />
+  <title>Kami Partner Program | Venues &amp; Local Discovery</title>
+  <meta name="description" content="Join the Kami Partner Program. Help people discover places worth showing up for — coffee shops, restaurants, music venues, fitness studios, and community spaces in Austin and beyond." />
   <link rel="icon" href="../assets/k-mark-transparent.png" type="image/png" sizes="any" />
   <link rel="stylesheet" href="../assets/partner/styles.css" />
+  <link rel="stylesheet" href="../assets/download-nav-button.css" />
   <script src="../assets/supabase-browser-public.js"></script>
+  <script>
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  </script>
 </head>
-<body>
+<body class="partner-is-public">
   <nav>
-    <div class="nav-inner">
+    <div class="nav-inner partner-nav-inner">
       <a href="/" aria-label="Kami home">
         <img class="wordmark-img" src="../assets/logo-wordmark.png" alt="Kami" />
       </a>
-      <a class="nav-link" href="/">Back to Kami</a>
+      <div class="partner-nav-right">
+        <div class="partner-nav-links">
+          <a class="nav-link" href="#partner-why">How It Works</a>
+          <a class="nav-link" href="#partner-inquiry">Become a Partner</a>
+          <a class="nav-link" href="#partner-login">Partner Login</a>
+        </div>
+        <a href="/#download" class="btn nav-download">Download Kami</a>
+      </div>
     </div>
   </nav>
 
-  <main class="container">
-    <div id="partner-root" class="partner-boot-loading amb-boot-loading" aria-live="polite" aria-busy="true">
-      <section class="panel boot-panel">
-        <p class="boot-text" role="status">Loading partner portal…</p>
-      </section>
-    </div>
+  <main class="container" id="partner-main">
+    <div id="partner-root" aria-live="polite"></div>
   </main>
+
+  <footer id="partner-public-footer">
+    <div class="nav-container footer-columns">
+      <div class="footer-brand">
+        <a href="/" aria-label="Kami home">
+          <img class="wordmark-img footer-wordmark" src="../assets/logo-wordmark.png" alt="Kami" />
+        </a>
+        <p>Real people. Real moments.</p>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <a href="/">Home</a>
+        <a href="/how-it-works">How It Works</a>
+        <a href="/#faq">FAQ</a>
+        <a href="/store">Store</a>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="mailto:hello@kamisocial.com"><strong>hello@kamisocial.com</strong></a>
+      </div>
+      <div class="footer-col">
+        <h4>Download</h4>
+        <a class="btn footer-download" href="/#download">Download Kami</a>
+      </div>
+    </div>
+    <div class="copyright">© 2026 Kami Social. All rights reserved.</div>
+  </footer>
 
   <div id="partner-modal" class="amb-modal partner-modal" hidden>
     <div class="amb-modal-backdrop partner-modal-backdrop" aria-hidden="true"></div>
@@ -37,10 +75,32 @@
     </div>
   </div>
 
-  <footer>
-    <p>© Kami Social · <a href="mailto:partners@kamisocial.com">partners@kamisocial.com</a></p>
-  </footer>
+  <script type="module">
+    import { renderPublicLandingHTML, schedulePartnerLandingHash } from "../assets/partner/public-landing.js";
 
+    const likelyLoggedIn =
+      typeof window.kamiHasLikelyStoredSession === "function" &&
+      window.kamiHasLikelyStoredSession();
+
+    if (!likelyLoggedIn) {
+      const root = document.getElementById("partner-root");
+      if (root && !root.querySelector(".partner-land")) {
+        root.innerHTML = renderPublicLandingHTML();
+        schedulePartnerLandingHash();
+      }
+    }
+  </script>
+  <script>
+    (function () {
+      var root = document.getElementById("partner-root");
+      if (!root || typeof window.kamiHasLikelyStoredSession !== "function") return;
+      if (!window.kamiHasLikelyStoredSession()) return;
+      root.className = "partner-boot-loading amb-boot-loading";
+      root.setAttribute("aria-busy", "true");
+      root.innerHTML =
+        '<section class="panel boot-panel"><p class="boot-text" role="status">Loading partner portal…</p></section>';
+    })();
+  </script>
   <script type="module" src="../assets/partner/app.js"></script>
 </body>
 </html>
