@@ -99,9 +99,12 @@
       root.className = "partner-boot-loading amb-boot-loading";
       root.setAttribute("aria-busy", "true");
       root.innerHTML =
-        '<section class="panel boot-panel"><p class="boot-text" role="status">Loading partner portal…</p></section>';
+        '<section class="panel boot-panel partner-boot-panel">' +
+        '<img class="boot-logo" src="../assets/k-mark-transparent.png" alt="" width="56" height="62" aria-hidden="true" />' +
+        '<p class="boot-text" role="status">Loading partner portal…</p>' +
+        '</section>';
     })();
   </script>
-  <script type="module" src="../assets/partner/app.js?v=20260614b"></script>
+  <script type="module" src="../assets/partner/app.js?v=20260615d"></script>
 </body>
 </html>

@@ -1,12 +1,6 @@
-import {
-  copyText,
-  escapeHtml,
-  formatDate,
-  formatDateTime,
-} from "./format.js";
+import { escapeHtml } from "./format.js";
 import {
   renderAgreementTermsSummary,
-  renderProgramTermsCard,
 } from "./terms-summary.js";
 import { wireTermTips } from "../ambassador/terms-summary.js";
 import {
@@ -15,6 +9,8 @@ import {
   clearPublicLandingMode,
 } from "./public-landing.js";
 import { getAgreement, getCurrentAgreementText } from "./agreements/index.js";
+import { renderImageOrFallback } from "./media.js";
+import { renderPartnerDashboard, readTabFromUrl } from "./dashboard.js?v=20260615d";
 
 const ROOT = document.getElementById("partner-root");
 const MODAL = document.getElementById("partner-modal");
@@ -55,7 +51,7 @@ function syncPartnerNav(loggedIn = false) {
 let supabase = null;
 let agreementStatus = null;
 let activePartnerId = null;
-let activeTab = "venues";
+let activeTab = readTabFromUrl();
 
 async function loadPublicConfig() {
   const fallbackUrl = "https://bscnpilzmilzabagnypx.supabase.co";
@@ -331,6 +327,16 @@ async function bootstrapSession() {
   else renderPublicShell({ loggedIn: true });
 }
 
+function renderPortalError(message) {
+  setRoot(`
+    <section class="panel"><h2>Could not load partner portal</h2>
+    <p class="muted">Something went wrong while loading your dashboard. Try refreshing the page.</p>
+    <p class="muted">${escapeHtml(message || "Unknown error")}</p>
+    <button class="btn secondary" type="button" id="logout-btn">Log out</button></section>`);
+  document.getElementById("logout-btn")?.addEventListener("click", logout);
+  syncPartnerNav(true);
+}
+
 function renderNotPartner() {
   setRoot(`
     <section class="panel partner-access-panel" aria-labelledby="partner-access-title">
@@ -373,10 +379,12 @@ function renderPartnerSwitcher(memberships, selectedId) {
 
 function renderAgreementPartnerChip(partner) {
   const name = String(partner?.display_name || "Partner").trim() || "Partner";
-  const avatarUrl = partner?.avatar_url || partner?.avatarUrl;
-  const avatar = avatarUrl
-    ? `<img class="agreement-user-avatar" src="${escapeHtml(avatarUrl)}" alt="" referrerpolicy="no-referrer" />`
-    : `<div class="agreement-user-avatar agreement-user-avatar-fallback" aria-hidden="true">${escapeHtml(name[0] || "P")}</div>`;
+  const avatar = renderImageOrFallback({
+    url: partner?.avatar_url || partner?.avatarUrl,
+    fallbackText: name,
+    imgClass: "agreement-user-avatar",
+    fallbackClass: "agreement-user-avatar agreement-user-avatar-fallback",
+  });
   return `<div class="agreement-user-chip">${avatar}<span class="agreement-user-name">${escapeHtml(name)}</span></div>`;
 }
 
@@ -509,268 +517,48 @@ async function acceptAgreement() {
   await bootstrapSession();
 }
 
-function formatLocation(venue) {
-  const parts = [venue.neighborhood, venue.city, venue.region].filter(Boolean);
-  if (parts.length) return parts.join(", ");
-  return venue.address || "Location not listed";
-}
-
-function formatCategory(venue) {
-  const parts = [venue.category, venue.subcategory].filter(Boolean);
-  return parts.length ? parts.join(" · ") : "Venue";
-}
-
-function renderVenuePhoto(venue, { featured = false } = {}) {
-  const cls = featured ? "venue-photo" : "venue-photo";
-  if (venue.photo_url) {
-    return `<img class="${cls}" src="${escapeHtml(venue.photo_url)}" alt="" referrerpolicy="no-referrer" />`;
-  }
-  const initial = (venue.name || "V")[0];
-  return `<div class="${cls} venue-photo-fallback" aria-hidden="true">${escapeHtml(initial)}</div>`;
-}
-
-function renderVenueCard(venue, { featured = false } = {}) {
-  const cardClass = featured ? "venue-card venue-card--featured" : "venue-card";
-  const activeBadge = venue.is_active
-    ? `<span class="venue-badge is-good">Active</span>`
-    : `<span class="venue-badge is-warn">${escapeHtml(venue.status || "Inactive")}</span>`;
-  const publicBadge = venue.is_public
-    ? `<span class="venue-badge is-good">Public</span>`
-    : `<span class="venue-badge is-warn">${escapeHtml(venue.visibility || "Not public")}</span>`;
-  const publishedBadge = venue.is_published
-    ? `<span class="venue-badge is-good">Published on Kami</span>`
-    : `<span class="venue-badge is-warn">Not published</span>`;
-
-  return `<article class="${cardClass}">
-    ${renderVenuePhoto(venue, { featured })}
-    <div>
-      <h3>${escapeHtml(venue.name || "Venue")}</h3>
-      <p class="venue-meta">${escapeHtml(formatCategory(venue))}<br>${escapeHtml(formatLocation(venue))}</p>
-      <div class="venue-badges">${activeBadge}${publicBadge}${publishedBadge}</div>
-    </div>
-  </article>`;
-}
-
-function renderVenuesSection(venues) {
-  const list = Array.isArray(venues) ? venues : [];
-  if (list.length === 0) {
-    return `<section class="panel">
-      <h2>Your Venues</h2>
-      <div class="empty-state">
-        <h3>No venues linked yet</h3>
-        <p>No venues have been linked to this partner account yet. Contact <a href="mailto:partners@kamisocial.com">partners@kamisocial.com</a> if you believe this is an error or need help getting set up.</p>
-      </div>
-    </section>`;
-  }
-
-  const gridClass = list.length === 1 ? "venue-grid" : "venue-grid venue-grid--multi";
-  const cards = list
-    .map((venue, idx) => renderVenueCard(venue, { featured: list.length === 1 && idx === 0 }))
-    .join("");
-
-  return `<section class="panel">
-    <h2>Your Venues</h2>
-    <p class="muted">${list.length === 1 ? "1 venue linked to your partner account." : `${list.length} venues linked to your partner account.`}</p>
-    <div class="${gridClass}">${cards}</div>
-  </section>`;
-}
-
-function renderReadinessSection(readiness) {
-  const items = Array.isArray(readiness) ? readiness : [];
-  if (!items.length) return "";
-  const rows = items
-    .map(
-      (item) => `<li class="readiness-item${item.met ? " is-met" : ""}">
-        <span class="readiness-mark">${item.met ? "✓" : "○"}</span>
-        <span>${escapeHtml(item.label || "")}</span>
-      </li>`
-    )
-    .join("");
-  return `<section class="panel">
-    <h2>Venue Readiness</h2>
-    <ul class="readiness-list">${rows}</ul>
-  </section>`;
-}
-
-function renderReferralSection(referral) {
-  const r = referral || {};
-  const code = String(r.code || "").trim();
-  const link = String(r.link || "").trim();
-  const signupCount = Number(r.signup_count ?? 0);
-  const linkHtml = link
-    ? `<a class="copy-value copy-value-link" id="ref-link" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link)}</a>`
-    : `<p class="copy-value copy-value-link" id="ref-link">—</p>`;
-
-  return `<section class="panel referral-panel">
-    <h2>Referral Program</h2>
-    <p class="muted">Share this link with customers and followers to help grow the Kami community.</p>
-    <div class="copy-grid">
-      <div><label>Referral Code</label><p class="copy-value" id="ref-code">${escapeHtml(code || "—")}</p></div>
-      <div><label>Referral Link</label>${linkHtml}</div>
-    </div>
-    <div class="btn-row">
-      <button type="button" class="btn secondary" id="copy-code"${code ? "" : " disabled"}>Copy Code</button>
-      <button type="button" class="btn secondary" id="copy-link"${link ? "" : " disabled"}>Copy Link</button>
-    </div>
-    <p class="referral-stat"><strong>${signupCount}</strong> registration${signupCount === 1 ? "" : "s"} via your link</p>
-  </section>`;
-}
-
-function renderProgramSection(program) {
-  const p = program?.program_parameters || {};
-  const agreementLabel =
-    program?.agreement_status === "signed"
-      ? `Accepted${program.agreement_signed_at ? ` · ${formatDate(program.agreement_signed_at)}` : ""}`
-      : "Not yet accepted";
-
-  return `<section class="panel">
-    <h2>Program Terms</h2>
-    ${renderProgramTermsCard(p)}
-    <p class="terms-reminder"><strong>Agreement status:</strong> ${escapeHtml(agreementLabel)}</p>
-  </section>`;
-}
-
-function renderSupportSection() {
-  return `<section class="panel">
-    <h2>Support</h2>
-    <p>Questions about your venues, referral link, or program terms?</p>
-    <p><a href="mailto:partners@kamisocial.com">partners@kamisocial.com</a></p>
-    <div class="support-links">
-      <a href="/terms">Terms of Service</a>
-      <a href="/privacy">Privacy Policy</a>
-    </div>
-  </section>`;
-}
-
-function renderEventsTab(events) {
-  const list = Array.isArray(events) ? events : [];
-  if (list.length === 0) {
-    return `<section class="panel">
-      <div class="empty-state">
-        <h3>No upcoming events found</h3>
-        <p>There are no upcoming published events across your linked venues right now. Events will appear here when they are scheduled at venues on your account.</p>
-      </div>
-    </section>`;
-  }
-
-  const cards = list
-    .map((event) => {
-      const location = [event.place_name, event.place_neighborhood, event.place_city].filter(Boolean).join(" · ");
-      return `<article class="event-card">
-        <h3>${escapeHtml(event.name || "Event")}</h3>
-        <p class="event-meta">
-          ${escapeHtml(formatDateTime(event.starts_at))}${event.ends_at ? ` – ${escapeHtml(formatDateTime(event.ends_at))}` : ""}<br>
-          ${escapeHtml(location)}<br>
-          Status: ${escapeHtml(event.status || "published")}
-        </p>
-      </article>`;
-    })
-    .join("");
-
-  return `<section class="panel">
-    <h2>Upcoming Events</h2>
-    <p class="muted">Events across all venues linked to your partner account.</p>
-    <div class="event-list">${cards}</div>
-  </section>`;
-}
-
 async function renderPortal() {
-  const partnerId = activePartnerId || agreementStatus?.partner_id;
-  if (!partnerId) {
-    await fetchAgreementStatus();
-  }
-
-  const pid = activePartnerId || agreementStatus?.partner_id;
-  const [dashboard, eventsPayload] = await Promise.all([
-    rpc("get_my_partner_dashboard", { p_partner_id: pid }),
-    rpc("get_my_partner_events", { p_partner_id: pid }),
-  ]);
-
-  if (!dashboard?.ok) {
-    if (dashboard?.error === "dashboard_locked") {
-      agreementStatus = dashboard.agreement_status;
-      renderAgreementFlow();
-      return;
+  try {
+    const partnerId = activePartnerId || agreementStatus?.partner_id;
+    if (!partnerId) {
+      await fetchAgreementStatus();
     }
-    throw new Error(dashboard?.error || "dashboard_load_failed");
-  }
 
-  const h = dashboard.header || {};
-  const memberships = agreementStatus?.memberships || [];
+    const pid = activePartnerId || agreementStatus?.partner_id;
+    const memberships = agreementStatus?.memberships || [];
 
-  const venuesTab =
-    renderVenuesSection(dashboard.venues) +
-    renderReadinessSection(dashboard.readiness) +
-    renderReferralSection(dashboard.referral) +
-    renderProgramSection(dashboard.program) +
-    renderSupportSection();
-
-  const eventsTab = renderEventsTab(eventsPayload?.events);
-
-  setRoot(`
-    ${renderPartnerSwitcher(memberships, pid)}
-    <section class="panel dashboard-header">
-      <div class="dashboard-header-main">
-        <div class="eyebrow dashboard-eyebrow">Partner Portal</div>
-        <div class="header-main">
-          <div class="header-copy">
-            <h1>${escapeHtml(h.display_name || "Partner")}</h1>
-            <p class="muted">${escapeHtml(h.contact_email || "")}${h.joined_at ? ` · Joined ${escapeHtml(formatDate(h.joined_at))}` : ""}</p>
-          </div>
-        </div>
-      </div>
-      <span class="status-badge">${escapeHtml(h.status_label || "Partner")}</span>
-    </section>
-
-    <div class="portal-tabs" role="tablist" aria-label="Partner portal sections">
-      <button type="button" class="portal-tab${activeTab === "venues" ? " is-active" : ""}" data-tab="venues" role="tab" aria-selected="${activeTab === "venues"}">Venues</button>
-      <button type="button" class="portal-tab${activeTab === "events" ? " is-active" : ""}" data-tab="events" role="tab" aria-selected="${activeTab === "events"}">Events</button>
-    </div>
-
-    <div id="tab-venues"${activeTab === "venues" ? "" : " hidden"}>${venuesTab}</div>
-    <div id="tab-events"${activeTab === "events" ? "" : " hidden"}>${eventsTab}</div>
-
-    <section class="panel centered-panel">
-      <button type="button" class="btn secondary" id="logout-btn">Log out</button>
-    </section>
-  `);
-
-  wirePartnerSwitcher();
-  wireTabs();
-  wireCopyButtons(dashboard.referral);
-  syncPartnerNav(true);
-  document.getElementById("logout-btn")?.addEventListener("click", logout);
-}
-
-function wireTabs() {
-  document.querySelectorAll(".portal-tab").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      activeTab = btn.getAttribute("data-tab") || "venues";
-      document.querySelectorAll(".portal-tab").forEach((el) => {
-        const on = el.getAttribute("data-tab") === activeTab;
-        el.classList.toggle("is-active", on);
-        el.setAttribute("aria-selected", on ? "true" : "false");
-      });
-      document.getElementById("tab-venues")?.toggleAttribute("hidden", activeTab !== "venues");
-      document.getElementById("tab-events")?.toggleAttribute("hidden", activeTab !== "events");
+    await renderPartnerDashboard({
+      rpc,
+      setRoot,
+      showModal,
+      hideModal,
+      supabase,
+      partnerId: pid,
+      memberships,
+      switcherHtml: renderPartnerSwitcher(memberships, pid),
+      activeTab,
+      setActiveTab: (tab) => {
+        activeTab = tab;
+      },
+      syncPartnerNav,
+      wirePartnerSwitcher,
+      onDashboardLocked: (status) => {
+        agreementStatus = status;
+        renderAgreementFlow();
+      },
+      onLeft: () => bootstrapSession(),
+      logout,
     });
-  });
-}
-
-function wireCopyButtons(referral) {
-  document.getElementById("copy-code")?.addEventListener("click", (ev) =>
-    copyText(referral?.code, ev.currentTarget)
-  );
-  document.getElementById("copy-link")?.addEventListener("click", (ev) =>
-    copyText(referral?.link, ev.currentTarget)
-  );
+  } catch (error) {
+    renderPortalError(error?.message);
+  }
 }
 
 async function logout() {
   if (supabase) await supabase.auth.signOut();
   agreementStatus = null;
   activePartnerId = null;
-  activeTab = "venues";
+  activeTab = "overview";
   renderPublicShell();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -785,8 +573,13 @@ async function logout() {
   if (!client) return;
 
   const { data } = await client.auth.getSession();
-  if (data?.session) await bootstrapSession();
-  else if (likelyLoggedIn) renderPublicShell();
+  if (data?.session) {
+    try {
+      await bootstrapSession();
+    } catch (error) {
+      renderPortalError(error?.message);
+    }
+  } else if (likelyLoggedIn) renderPublicShell();
   else wirePublicForm();
 
   client.auth.onAuthStateChange((event, session) => {

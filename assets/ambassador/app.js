@@ -14,6 +14,7 @@ import {
   wireTermTips,
 } from "./terms-summary.js";
 import { getAgreement, getCurrentAgreementText } from "./agreements/index.js";
+import { wireEditReferralCode } from "../shared/referral-code-edit.js";
 
 const ROOT = document.getElementById("ambassador-root");
 const MODAL = document.getElementById("amb-modal");
@@ -632,6 +633,7 @@ async function renderDashboard() {
           <p class="copy-value" id="ref-code">${escapeHtml(referral.code || "—")}</p>
           <div class="btn-row">
             <button type="button" class="btn secondary" id="copy-code">Copy Code</button>
+            <button type="button" class="btn secondary" id="edit-code">Edit Code</button>
           </div>
         </div>
         <div>
@@ -695,6 +697,16 @@ async function renderDashboard() {
   document.getElementById("copy-link")?.addEventListener("click", (ev) =>
     copyText(referral.link, ev.currentTarget)
   );
+  wireEditReferralCode({
+    rpc,
+    showModal,
+    hideModal,
+    currentCode: referral.code,
+    onUpdated: ({ code, link }) => {
+      referral.code = code;
+      referral.link = link;
+    },
+  });
   document.getElementById("logout-btn")?.addEventListener("click", logout);
 
   if (currentAgreement) {

@@ -1,8 +1,9 @@
-import { escapeHtml, formatMoney } from "./format.js";
+import { escapeHtml, formatMoney, formatDateTime } from "./format.js";
 import {
   formatPayoutThresholdSummary,
   formatQualifiedReferralSummary,
   formatRateSummary,
+  normalizeProgramParameters,
 } from "../ambassador/terms-summary.js";
 
 const TOOLTIPS = {
@@ -17,6 +18,12 @@ const TOOLTIPS = {
   status:
     "Your partner status determines whether you can access the Partner Portal and participate in the Program.",
 };
+
+export function formatPartnerTierCapSummary(params) {
+  const cents = params?.tier_cap_cents ?? params?.maximum_spend_cents;
+  if (cents == null || Number.isNaN(Number(cents))) return "No tier cap set";
+  return `${formatMoney(Number(cents))} monthly cap`;
+}
 
 function capitalizeWords(text) {
   if (text == null || text === "" || text === "—") return text;
@@ -109,24 +116,47 @@ export function renderAgreementTermsSummary(params, partner) {
   </div>`;
 }
 
-export function renderProgramTermsCard(params) {
-  const p = params || {};
-  const rate =
-    p.rate_display ||
-    (p.rate_cents_per_registration != null
-      ? `${formatMoney(p.rate_cents_per_registration)} per qualified referral`
-      : "See your Partner Portal for current rates");
-  const threshold = p.payout_threshold || "Contact partners@kamisocial.com";
-  const qualification =
-    p.qualification_requirements ||
-    "Qualified referrals must meet Kami's active-user criteria. Contact partners@kamisocial.com for details.";
-  const schedule =
-    p.payout_schedule || "Payouts are processed periodically for approved balances that meet the payout threshold.";
+export function renderProgramTermsCard(params, { reminder = true } = {}) {
+  const normalized = normalizeProgramParameters(params) || {};
+  const rows = [
+    ["Qualified Referral", capitalizeWords(formatQualifiedReferralSummary(normalized))],
+    ["Rate Schedule", capitalizeWords(formatPartnerRateSummary(normalized))],
+    ["Tier Cap", capitalizeWords(formatPartnerTierCapSummary(normalized))],
+    ["Payout Threshold", capitalizeWords(formatPayoutThresholdSummary(normalized))],
+    ["Last Updated", formatDateTime(normalized.last_updated)],
+  ]
+    .map(
+      ([label, value]) =>
+        `<div class="terms-row"><dt>${escapeHtml(label)}</dt><dd>${renderTermsValueHtml(value)}</dd></div>`
+    )
+    .join("");
+  const reminderHtml = reminder
+    ? `<p class="terms-reminder">Program terms, rates, qualification requirements, and tier caps may change from time to time. The current terms shown here apply when posted. Your Partner Portal always shows the current settings.</p>`
+    : "";
+  return `<div class="terms-grid">${rows}</div>${reminderHtml}`;
+}
 
-  return `<dl class="terms-grid">
-    <div class="terms-row"><dt>Referral reward</dt><dd>${escapeHtml(rate)}</dd></div>
-    <div class="terms-row"><dt>Payout threshold</dt><dd>${escapeHtml(threshold)}</dd></div>
-    <div class="terms-row"><dt>Qualification requirements</dt><dd>${escapeHtml(qualification)}</dd></div>
-    <div class="terms-row"><dt>Payout schedule</dt><dd>${escapeHtml(schedule)}</dd></div>
-  </dl>`;
+export function renderProgramParametersSnapshot(params, display = {}) {
+  const normalized = normalizeProgramParameters(params);
+  if (!normalized) return `<p class="muted">No program parameters on file.</p>`;
+  const threshold =
+    display.payout_threshold_display ||
+    normalized.payout_threshold ||
+    formatPayoutThresholdSummary(normalized);
+  const tierCap =
+    display.tier_cap_display ||
+    formatPartnerTierCapSummary(normalized);
+  const rows = [
+    ["Qualified Referral", capitalizeWords(formatQualifiedReferralSummary(normalized))],
+    ["Rate Schedule", capitalizeWords(formatPartnerRateSummary(normalized))],
+    ["Tier Cap", tierCap],
+    ["Payout Threshold", capitalizeWords(threshold)],
+    ["Last Updated", formatDateTime(normalized.last_updated)],
+  ]
+    .map(
+      ([label, value]) =>
+        `<div class="terms-row"><dt>${escapeHtml(label)}</dt><dd>${renderTermsValueHtml(value)}</dd></div>`
+    )
+    .join("");
+  return `<div class="terms-grid snapshot-terms-grid">${rows}</div>`;
 }
