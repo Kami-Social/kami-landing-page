@@ -34,14 +34,12 @@ function syncPartnerNav(loggedIn = false) {
   const marketingLinks = document.querySelectorAll(".partner-nav-marketing");
   const howLink = document.querySelector('.partner-nav-marketing[href*="partner-why"]');
   const becomeLink = document.querySelector('.partner-nav-marketing[href*="partner-inquiry"]');
-  const downloadBtn = document.querySelector(".partner-nav-inner .nav-download");
 
   if (loggedIn) {
     if (homeLink) homeLink.hidden = false;
     marketingLinks.forEach((link) => {
       link.hidden = true;
     });
-    if (downloadBtn) downloadBtn.textContent = "Download";
     return;
   }
 
@@ -51,7 +49,6 @@ function syncPartnerNav(loggedIn = false) {
   });
   if (howLink) howLink.href = "#partner-why";
   if (becomeLink) becomeLink.href = "#partner-inquiry";
-  if (downloadBtn) downloadBtn.textContent = "Download Kami";
 }
 
 /** @type {import('@supabase/supabase-js').SupabaseClient | null} */
