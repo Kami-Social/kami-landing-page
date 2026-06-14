@@ -3,20 +3,20 @@ export const VERSION = "partner_terms_v1";
 
 export const TITLE = "Kami Partner Program Agreement";
 
-export const TEXT = `KAMI PARTNER PROGRAM AGREEMENT
+export const TEXT = `KAMI PARTNER PROGRAM AGREEMENT (Version 1.0)
 
-Effective upon acceptance. Version: partner_terms_v1.
+Effective upon acceptance.
 
 This Partner Program Agreement ("Agreement") is between Kami Social, Inc. ("Kami," "we," or "us") and you ("Partner," "you") regarding participation in the Kami Partner Program ("Program") for eligible venues, events, venue operators, event organizers, and other approved partners.
 
 1. Program Overview
-The Program allows approved partners to participate in Kami's partner network for venues and/or events, share partner referral links, and receive compensation for Qualified Referrals according to the program terms displayed in your Partner Portal and the parameters snapshot accepted with this Agreement.
+The Program allows approved partners to participate in Kami's venue and event network, access partner tools and promotional resources, share partner referral links, and, where applicable, receive compensation for Qualified Referrals according to the program terms displayed in your Partner Portal and the parameters snapshot accepted with this Agreement.
 
 2. Eligibility and Approval
 Participation requires a Kami account, explicit approval as a partner, and (where applicable) linkage of one or more venues and/or events to your partner account. Kami may approve, pause, or terminate participation at any time. You represent that you have authority to act on behalf of the venue(s), event(s), or organization(s) linked to your account.
 
 3. Referral Links and Promotion
-You may receive a unique partner referral link and referral code. You may share them with customers, guests, and audiences you believe would genuinely enjoy Kami. You must not spam, misrepresent Kami, impersonate Kami, or engage in fraudulent or deceptive promotion.
+You will receive a unique partner referral link. You may share it with customers, followers, and guests you believe would genuinely enjoy Kami. You must not spam, misrepresent Kami, impersonate Kami, or engage in fraudulent or deceptive promotion.
 
 4. Qualified Referrals
 A Qualified Referral is a referral that satisfies the qualification requirements currently displayed in the Partner Portal.

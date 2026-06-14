@@ -8,6 +8,7 @@ import {
   renderAgreementTermsSummary,
   renderProgramTermsCard,
 } from "./terms-summary.js";
+import { wireTermTips } from "../ambassador/terms-summary.js";
 import {
   renderPublicLandingHTML,
   wirePublicLanding,
@@ -296,10 +297,24 @@ async function bootstrapSession() {
 
 function renderNotPartner() {
   setRoot(`
-    <section class="panel centered-panel">
-      <h2>Partners only</h2>
-      <p>This page is for approved Kami partners only. If you're interested in participating, contact <a href="mailto:partners@kamisocial.com">partners@kamisocial.com</a>.</p>
-      <button class="btn secondary" type="button" id="logout-btn">Log out</button>
+    <section class="panel partner-access-panel" aria-labelledby="partner-access-title">
+      <div class="partner-access-card">
+        <img class="partner-access-mark" src="/assets/k-mark-transparent.png" alt="" width="52" height="52" aria-hidden="true" />
+        <h2 id="partner-access-title">Partner Portal</h2>
+        <p class="partner-access-lead">This area is reserved for approved Kami venue and event partners.</p>
+        <p class="partner-access-body">Approved partners can manage venues, events, referrals, agreements, and participation in the Kami Partner Network.</p>
+        <div class="partner-access-cta">
+          <p class="partner-access-cta-label">Interested in becoming a partner?</p>
+          <a class="btn partner-access-contact" href="mailto:partners@kamisocial.com">Contact partners@kamisocial.com</a>
+        </div>
+        <ul class="partner-access-benefits">
+          <li>Promote venues and events</li>
+          <li>Reach nearby Kami users</li>
+          <li>Track referrals and engagement</li>
+          <li>Access partner-only tools</li>
+        </ul>
+        <button class="btn secondary btn-sm partner-access-logout" type="button" id="logout-btn">Log out</button>
+      </div>
     </section>
   `);
   document.getElementById("logout-btn")?.addEventListener("click", logout);
@@ -319,6 +334,12 @@ function renderPartnerSwitcher(memberships, selectedId) {
   </div>`;
 }
 
+function renderAgreementPartnerChip(partner) {
+  const name = String(partner?.display_name || "Partner").trim() || "Partner";
+  const initial = name[0] || "P";
+  return `<div class="agreement-user-chip"><div class="agreement-user-avatar agreement-user-avatar-fallback" aria-hidden="true">${escapeHtml(initial)}</div><span class="agreement-user-name">${escapeHtml(name)}</span></div>`;
+}
+
 function renderAgreementFlow() {
   const version = agreementStatus.current_agreement_version || "partner_terms_v1";
   const agreement = getAgreement(version);
@@ -332,10 +353,11 @@ function renderAgreementFlow() {
       <div class="agreement-panel-top">
         <div class="agreement-panel-head">
           <h2 class="agreement-page-title">Accept Partner Agreement</h2>
-          <p class="agreement-intro">Review your partner program terms for <strong>${escapeHtml(partner.display_name || "your account")}</strong> and accept to continue.</p>
+          <p class="agreement-intro">Review your current partner terms and accept the agreement to continue.</p>
         </div>
+        ${renderAgreementPartnerChip(partner)}
       </div>
-      ${renderAgreementTermsSummary(params)}
+      ${renderAgreementTermsSummary(params, partner)}
     </section>
     <section class="panel agreement-doc-panel">
       <h3>${escapeHtml(agreement?.title || "Partner Program Agreement")}</h3>
@@ -350,6 +372,7 @@ function renderAgreementFlow() {
   `);
 
   wirePartnerSwitcher();
+  if (ROOT) wireTermTips(ROOT);
   const check = document.getElementById("agree-check");
   const acceptBtn = document.getElementById("accept-btn");
   check?.addEventListener("change", () => {
