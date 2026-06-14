@@ -7,10 +7,16 @@ import {
   renderPublicLandingHTML,
   wirePublicLanding,
   clearPublicLandingMode,
+  syncSiteFooter,
 } from "./public-landing.js";
 import { getAgreement, getCurrentAgreementText } from "./agreements/index.js";
 import { renderImageOrFallback } from "./media.js";
-import { renderPartnerDashboard, readTabFromUrl } from "./dashboard.js?v=20260615d";
+import { renderPartnerDashboard, readTabFromUrl } from "./dashboard.js?v=20260616a";
+import {
+  getPortalAuthStorageKey,
+  hasLikelyPortalStoredSession,
+  PORTAL_AUTH_IDS,
+} from "../shared/portal-auth-storage.js";
 
 const ROOT = document.getElementById("partner-root");
 const MODAL = document.getElementById("partner-modal");
@@ -30,16 +36,25 @@ function syncPartnerNav(loggedIn = false) {
   const marketingLinks = document.querySelectorAll(".partner-nav-marketing");
   const howLink = document.querySelector('.partner-nav-marketing[href*="partner-why"]');
   const becomeLink = document.querySelector('.partner-nav-marketing[href*="partner-inquiry"]');
+  const navLogout = document.getElementById("partner-nav-logout");
 
   if (loggedIn) {
     if (homeLink) homeLink.hidden = false;
     marketingLinks.forEach((link) => {
       link.hidden = true;
     });
+    if (navLogout) {
+      navLogout.hidden = false;
+      navLogout.removeAttribute("aria-hidden");
+    }
     return;
   }
 
   if (homeLink) homeLink.hidden = true;
+  if (navLogout) {
+    navLogout.hidden = true;
+    navLogout.setAttribute("aria-hidden", "true");
+  }
   marketingLinks.forEach((link) => {
     link.hidden = false;
   });
@@ -87,6 +102,7 @@ async function initSupabase() {
   );
   supabase = createClient(cfg.url, cfg.anonKey, {
     auth: {
+      storageKey: getPortalAuthStorageKey(PORTAL_AUTH_IDS.partner, cfg.url),
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false,
@@ -95,8 +111,21 @@ async function initSupabase() {
   return supabase;
 }
 
+function resetPortalViewport() {
+  if (window.location.hash) {
+    const url = new URL(window.location.href);
+    url.hash = "";
+    window.history.replaceState({}, "", url);
+  }
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+}
+
 function setRoot(html, { publicLanding = false } = {}) {
   if (!ROOT) return;
+  const leavingPublicLanding =
+    !publicLanding &&
+    (document.body.classList.contains("partner-is-public") || Boolean(ROOT.querySelector(".partner-land")));
+
   ROOT.classList.remove("partner-boot-loading");
   ROOT.removeAttribute("aria-busy");
   if (publicLanding) {
@@ -105,6 +134,10 @@ function setRoot(html, { publicLanding = false } = {}) {
     clearPublicLandingMode();
   }
   ROOT.innerHTML = html;
+
+  if (leavingPublicLanding) {
+    resetPortalViewport();
+  }
 }
 
 function showModal(title, bodyHtml) {
@@ -163,7 +196,12 @@ function showForgotPasswordResult(code, message) {
 }
 
 function hasLikelyStoredSession() {
-  return typeof window.kamiHasLikelyStoredSession === "function" && window.kamiHasLikelyStoredSession();
+  const cfg = window.__KAMI_BROWSER_SUPABASE__ || {};
+  const url = String(cfg.url || "https://bscnpilzmilzabagnypx.supabase.co").trim();
+  if (typeof window.kamiHasLikelyStoredSession === "function") {
+    return window.kamiHasLikelyStoredSession(PORTAL_AUTH_IDS.partner);
+  }
+  return hasLikelyPortalStoredSession(PORTAL_AUTH_IDS.partner, url);
 }
 
 function renderPublicShell({ misconfigured = false, loggedIn = false } = {}) {
@@ -175,8 +213,7 @@ function renderPublicShell({ misconfigured = false, loggedIn = false } = {}) {
     ROOT.classList.remove("partner-boot-loading");
     ROOT.removeAttribute("aria-busy");
     document.body.classList.add("partner-is-public");
-    const footer = document.getElementById("partner-public-footer");
-    if (footer) footer.hidden = false;
+    syncSiteFooter(true);
   }
 
   wirePublicLanding({ wireLoginForm: wirePublicForm });
@@ -560,14 +597,18 @@ async function logout() {
   activePartnerId = null;
   activeTab = "overview";
   renderPublicShell();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: "auto" });
 }
 
 (async function main() {
+  syncPartnerNav(false);
+
   const likelyLoggedIn = hasLikelyStoredSession();
   if (!likelyLoggedIn) {
     renderPublicShell();
   }
+
+  document.getElementById("partner-nav-logout")?.addEventListener("click", logout);
 
   const client = await initSupabase();
   if (!client) return;
@@ -579,8 +620,11 @@ async function logout() {
     } catch (error) {
       renderPortalError(error?.message);
     }
-  } else if (likelyLoggedIn) renderPublicShell();
-  else wirePublicForm();
+  } else {
+    syncPartnerNav(false);
+    if (likelyLoggedIn) renderPublicShell();
+    else wirePublicForm();
+  }
 
   client.auth.onAuthStateChange((event, session) => {
     if (event === "INITIAL_SESSION") return;

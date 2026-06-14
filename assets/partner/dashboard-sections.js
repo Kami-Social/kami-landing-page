@@ -251,7 +251,7 @@ function renderEventCard(event) {
 
 export function renderPartnerHero(header, avatarHtml) {
   const h = header || {};
-  return `<section class="panel dashboard-header partner-hero">
+  return `<section class="panel dashboard-header">
     <div class="dashboard-header-main">
       <div class="eyebrow dashboard-eyebrow">Partner Portal</div>
       <div class="header-main">
@@ -290,21 +290,70 @@ function renderNetworkSummary({ venues, events }) {
   const venueList = Array.isArray(venues) ? venues : [];
   const eventList = Array.isArray(events) ? events : [];
   const activeVenues = venueList.filter((v) => v.is_active).length;
-  const publishedVenues = venueList.filter((v) => v.is_published).length;
   const upcomingEvents = eventList.filter((e) => eventTimingState(e).label === "Upcoming").length;
   const liveEvents = eventList.filter((e) => eventTimingState(e).label === "Live").length;
 
   return `<section class="panel panel-primary">
     <h2>Partner Network</h2>
     <p class="section-lede">Summary of venues and events connected to your partner account.</p>
-    <div class="summary-stats-grid">
-      ${renderSummaryStat("Linked Venues", String(venueList.length))}
-      ${renderSummaryStat("Linked Events", String(eventList.length))}
+    <div class="summary-stats-grid summary-stats-grid--three">
       ${renderSummaryStat("Active Venues", String(activeVenues))}
-      ${renderSummaryStat("Published on Kami", String(publishedVenues))}
       ${renderSummaryStat("Upcoming Events", String(upcomingEvents))}
       ${renderSummaryStat("Live Events", String(liveEvents))}
     </div>
+  </section>`;
+}
+
+function formatOutreachStatus(status) {
+  const key = String(status || "").toLowerCase();
+  if (key === "accepted") return "Accepted";
+  if (key === "sent") return "Sent";
+  if (key === "failed") return "Failed";
+  if (!key) return "—";
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+function renderConnectionRequestsSection(outreachPayload) {
+  const events = Array.isArray(outreachPayload?.events) ? outreachPayload.events : [];
+  const dailyApp = outreachPayload?.daily || {};
+  const dailyPortal = outreachPayload?.daily_dashboard || {};
+  const appLimit = Number(dailyApp.limit ?? 5);
+  const appUsed = Number(dailyApp.used_today ?? 0);
+  const appRemaining = Number.isFinite(Number(dailyApp.remaining_today))
+    ? Number(dailyApp.remaining_today)
+    : Math.max(appLimit - appUsed, 0);
+  const portalLimit = Number(dailyPortal.limit ?? 5);
+  const portalUsed = Number(dailyPortal.used_today ?? 0);
+  const portalRemaining = Number.isFinite(Number(dailyPortal.remaining_today))
+    ? Number(dailyPortal.remaining_today)
+    : Math.max(portalLimit - portalUsed, 0);
+
+  const capHint = `Kami app in-venue outreach: up to ${appLimit}/day (${appUsed} used, ${appRemaining} remaining). Partner portal (Venues tab): up to ${portalLimit}/day (${portalUsed} used, ${portalRemaining} remaining).`;
+
+  const rows = events
+    .map(
+      (row) => `<tr>
+        <td>${formatDateTime(row.created_at)}</td>
+        <td>${escapeHtml(row.venue_name || "Venue")}</td>
+        <td><span class="status-pill">${escapeHtml(formatOutreachStatus(row.status))}</span></td>
+      </tr>`
+    )
+    .join("");
+
+  const table = rows
+    ? `<div class="table-wrap"><table class="data-table">
+        <thead><tr><th>Date</th><th>Venue</th><th>Status</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>`
+    : `<div class="empty-state compact-empty">
+        <p>No connection requests yet. Requests sent from the Kami app or the partner portal Venues tab will appear here.</p>
+      </div>`;
+
+  return `<section class="panel panel-secondary">
+    <h2>Recent Connection Requests</h2>
+    <p class="section-lede">In-venue connection requests sent by your partner account. User identities are never shown.</p>
+    <p class="muted outreach-cap-note">${escapeHtml(capHint)}</p>
+    ${table}
   </section>`;
 }
 
@@ -440,6 +489,7 @@ export function renderPartnerOverviewTab({
   venues,
   events,
   insights,
+  outreach,
   storeRewards,
   referral,
   metrics,
@@ -452,6 +502,7 @@ export function renderPartnerOverviewTab({
   return `
     ${renderNetworkSummary({ venues, events })}
     ${renderInsightsSummaryCard(insights)}
+    ${renderConnectionRequestsSection(outreach)}
     ${renderPartnerStoreRewardsSection(storeRewards)}
     ${renderReferralProgram({
       referral,
@@ -463,10 +514,7 @@ export function renderPartnerOverviewTab({
     ${renderChangeLedger(ledgerTable)}
     ${renderAgreementHistorySection(history)}
     ${renderSupportSection()}
-    ${renderLeaveSection()}
-    <section class="panel centered-panel">
-      <button type="button" class="btn secondary" id="logout-btn">Log out</button>
-    </section>`;
+    ${renderLeaveSection()}`;
 }
 
 export function renderPartnerVenuesTab({ venues, insights }) {

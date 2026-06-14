@@ -22,9 +22,20 @@
   margin: 0;
 }
 
+body:has(.partner-nav-inner) {
+  --site-nav-height: 76px;
+}
+
 .portal-tabs--top {
+  position: sticky;
+  top: var(--site-nav-height, 72px);
+  z-index: 40;
   margin: 0 0 18px;
   max-width: 100%;
+  padding: 8px 0 10px;
+  background: rgba(4, 7, 17, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .portal-tabs--top .portal-tab--top {
@@ -41,6 +52,21 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 12px;
+}
+
+.summary-stats-grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 640px) {
+  .summary-stats-grid--three {
+    grid-template-columns: 1fr;
+  }
+}
+
+.outreach-cap-note {
+  margin: 0 0 12px;
+  font-size: 13px;
 }
 
 .summary-stat {
@@ -738,9 +764,15 @@
 
 .visit-history-controls {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 10px;
   align-items: center;
+}
+
+@media (max-width: 720px) {
+  .visit-history-controls {
+    grid-template-columns: 1fr;
+  }
 }
 
 .visit-history-search {
@@ -875,6 +907,64 @@
 .visit-history-page {
   font-size: 13px;
   color: var(--muted);
+}
+
+.visit-col-action {
+  white-space: nowrap;
+  width: 1%;
+}
+
+.visit-action-btn {
+  min-width: 5.5rem;
+}
+
+.visitor-message-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.visitor-message-thread {
+  max-height: 280px;
+  overflow-y: auto;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.visitor-message-row {
+  margin: 0;
+}
+
+.visitor-message-meta {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.visitor-message-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.visitor-message-input {
+  width: 100%;
+  resize: vertical;
+  min-height: 72px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+  font: inherit;
+}
+
+.visitor-message-compose-label {
+  font-size: 13px;
+  font-weight: 650;
 }
 
 .activity-list--compact {

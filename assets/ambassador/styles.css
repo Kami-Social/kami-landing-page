@@ -1,3 +1,117 @@
+.ambassador-boot-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 160px;
+  padding: 48px 24px;
+}
+
+.boot-logo {
+  width: 56px;
+  height: auto;
+  filter: drop-shadow(0 0 20px rgba(124, 77, 255, 0.5));
+}
+
+.ambassador-boot-panel .boot-text {
+  margin: 0;
+}
+
+.site-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(2, 4, 12, 0.55);
+  padding: 44px 0 24px;
+  margin-top: 48px;
+  text-align: left;
+}
+
+.site-footer .nav-container {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.site-footer .footer-wordmark {
+  width: 132px;
+}
+
+.site-footer .footer-columns {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1fr 1.05fr auto;
+  gap: 34px;
+  align-items: start;
+}
+
+.site-footer .footer-brand p {
+  margin: 12px 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.site-footer .footer-col h4 {
+  margin: 0 0 12px;
+  color: #fff;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+}
+
+.site-footer .footer-col a {
+  display: block;
+  margin: 9px 0;
+  color: var(--muted);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.site-footer .footer-col a:hover {
+  color: #fff;
+}
+
+.site-footer .copyright {
+  text-align: center;
+  color: #778099;
+  margin-top: 36px;
+  font-size: 14px;
+}
+
+.ambassador-is-public .site-footer {
+  margin-top: 0;
+}
+
+.partner-is-public .site-footer {
+  margin-top: 0;
+}
+
+.ambassador-is-public .container {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ambassador-is-public .nav-container {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+@media (max-width: 760px) {
+  .ambassador-is-public .nav-container,
+  .site-footer .nav-container,
+  .site-footer .footer-columns {
+    width: min(100% - 28px, 1180px);
+  }
+
+  .site-footer .footer-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 34px;
+  }
+
+  .site-footer .footer-brand {
+    grid-column: 1 / -1;
+  }
+}
+
 :root {
   --text: #f7f3ff;
   --muted: #a9b0c8;
@@ -30,7 +144,7 @@ a:hover { color: #fff; }
   padding: 22px 22px 24px;
 }
 .login-panel .btn { width: 100%; }
-nav {
+body > nav {
   position: sticky; top: 0; z-index: 50;
   backdrop-filter: blur(18px);
   background: rgba(5, 8, 20, 0.78);
@@ -191,7 +305,13 @@ input:focus { outline: none; border-color: rgba(124, 77, 255, 0.55); box-shadow:
 }
 .dashboard-eyebrow { margin-bottom: 0; }
 .header-main { display: flex; align-items: center; gap: 16px; }
-.header-copy h1 { margin-bottom: 6px; }
+.header-copy h1 {
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, var(--purple2), #ffffff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
 .avatar, .table-avatar {
   width: 64px; height: 64px; border-radius: 50%; object-fit: cover;
   border: 2px solid rgba(165, 107, 255, 0.45);

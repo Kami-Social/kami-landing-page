@@ -34,6 +34,15 @@
   text-decoration: none;
 }
 
+.partner-nav-logout {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+#partner-nav-logout[hidden] {
+  display: none !important;
+}
+
 .partner-nav-links {
   display: flex;
   align-items: center;
@@ -113,86 +122,20 @@ body.partner-is-public #partner-root:empty {
   margin: 0 auto;
 }
 
-.partner-is-public footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(2, 4, 12, 0.55);
-  padding: 44px 0 24px;
-  margin-top: 0;
-  text-align: left;
-}
-
-.partner-is-public .footer-wordmark {
-  width: 132px;
-}
-
-.partner-is-public .footer-columns {
-  display: grid;
-  grid-template-columns: 1.25fr 1fr 1fr 1.05fr auto;
-  gap: 34px;
-  align-items: start;
-}
-
-.partner-is-public .footer-brand p {
-  margin: 12px 0 0;
-  color: var(--muted);
-  line-height: 1.45;
-}
-
-.partner-is-public .footer-col h4 {
-  margin: 0 0 12px;
-  color: #fff;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.13em;
-}
-
-.partner-is-public .footer-col a {
-  display: block;
-  margin: 9px 0;
-  color: var(--muted);
-  font-weight: 650;
-  text-decoration: none;
-}
-
-.partner-is-public .footer-col a:hover {
-  color: #fff;
-}
-
-.partner-is-public .footer-download {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  color: #fff !important;
-  margin-top: 4px !important;
-  padding: 14px 22px !important;
-  white-space: nowrap !important;
-}
-
-.partner-is-public .copyright {
-  text-align: center;
-  color: #778099;
-  margin-top: 36px;
-  font-size: 14px;
-}
-
 @media (max-width: 760px) {
   .partner-is-public .nav-container,
-  .partner-is-public .footer-columns {
+  .site-footer .nav-container,
+  .site-footer .footer-columns {
     width: min(100% - 28px, 1180px);
   }
 
-  .partner-is-public .footer-columns {
+  .site-footer .footer-columns {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 28px 34px;
   }
 
-  .partner-is-public .footer-brand {
+  .site-footer .footer-brand {
     grid-column: 1 / -1;
-  }
-
-  .partner-is-public .footer-download {
-    width: 100%;
-    max-width: 220px;
   }
 }
 
