@@ -1,4 +1,5 @@
 import { parsePlaceImagesPath, pickUsablePhotoUrl } from "./media.js";
+import { partnerMediaDebug } from "./media-debug.js";
 
 const SIGNED_URL_TTL_SEC = 60 * 60;
 
@@ -28,8 +29,15 @@ async function fetchSignedKamiImageFromApi(supabase, partnerId, placeId) {
         Authorization: `Bearer ${session.access_token}`,
       },
     });
+    const payload = await response.json().catch(() => ({}));
+    partnerMediaDebug("place-photo.api", {
+      placeId,
+      status: response.status,
+      ok: payload?.ok,
+      error: payload?.error,
+      hasUrl: Boolean(payload?.url),
+    });
     if (!response.ok) return null;
-    const payload = await response.json();
     return payload?.ok && payload?.url ? payload.url : null;
   } catch (_e) {
     return null;
@@ -42,6 +50,12 @@ async function downloadStorageBlob(supabase, bucket, path) {
   if (!supabase || !normalizedPath) return null;
 
   const { data, error } = await supabase.storage.from(normalizedBucket).download(normalizedPath);
+  partnerMediaDebug("storage.download", {
+    bucket: normalizedBucket,
+    path: normalizedPath,
+    ok: Boolean(data),
+    error: error?.message || null,
+  });
   if (error || !data) return null;
   return URL.createObjectURL(data);
 }
@@ -55,6 +69,13 @@ async function signStoragePath(supabase, bucket, path) {
     .from(normalizedBucket)
     .createSignedUrl(normalizedPath, SIGNED_URL_TTL_SEC);
 
+  partnerMediaDebug("storage.createSignedUrl", {
+    bucket: normalizedBucket,
+    path: normalizedPath,
+    ok: Boolean(data?.signedUrl),
+    error: error?.message || null,
+  });
+
   if (error || !data?.signedUrl) return null;
   return data.signedUrl;
 }
@@ -64,20 +85,38 @@ export async function resolveVenuePhotoUrl(supabase, venue, partnerId) {
   const bucket = venue.photo_storage_bucket || "place-images";
   const path = venue.photo_storage_path || parsePlaceImagesPath(venue.photo_url);
 
+  partnerMediaDebug("resolveVenuePhotoUrl.start", {
+    placeId,
+    bucket,
+    path,
+    rawPhotoUrl: venue.photo_url,
+  });
+
   if (path) {
     const blobUrl = await downloadStorageBlob(supabase, bucket, path);
-    if (blobUrl) return blobUrl;
+    if (blobUrl) {
+      partnerMediaDebug("resolveVenuePhotoUrl.result", { placeId, source: "blob_download" });
+      return blobUrl;
+    }
 
     const signed = await signStoragePath(supabase, bucket, path);
-    if (signed) return signed;
+    if (signed) {
+      partnerMediaDebug("resolveVenuePhotoUrl.result", { placeId, source: "client_signed_url" });
+      return signed;
+    }
   }
 
   if (partnerId && placeId) {
     const apiUrl = await fetchSignedKamiImageFromApi(supabase, partnerId, placeId);
-    if (apiUrl) return apiUrl;
+    if (apiUrl) {
+      partnerMediaDebug("resolveVenuePhotoUrl.result", { placeId, source: "place_photo_api" });
+      return apiUrl;
+    }
   }
 
-  return pickUsablePhotoUrl(venue.photo_url);
+  const fallback = pickUsablePhotoUrl(venue.photo_url);
+  partnerMediaDebug("resolveVenuePhotoUrl.result", { placeId, source: "fallback", fallback });
+  return fallback;
 }
 
 export async function signVenuePhotoUrls(supabase, partnerId, venues) {

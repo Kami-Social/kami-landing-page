@@ -3,20 +3,40 @@ const STORAGE_PUBLIC_PREFIX =
 
 import { escapeHtml } from "./format.js";
 
-/** Extract object path from a place-images public or signed URL. */
+/**
+ * True for place-images storage URLs that must not be used as bare <img src>
+ * (public object URLs 404; authenticated object URLs return 400 without a JWT).
+ */
+export function isUnusablePlaceImagesBrowserUrl(raw) {
+  const value = String(raw ?? "").trim();
+  if (!value) return false;
+  if (/\/object\/sign\/place-images\//i.test(value)) return false;
+  if (/\/object\/public\/place-images\//i.test(value)) return true;
+  if (/\/object\/place-images\//i.test(value)) return true;
+  if (/\/storage\/v1\/object\/place-images\//i.test(value)) return true;
+  return false;
+}
+
+/** @deprecated Use isUnusablePlaceImagesBrowserUrl */
+export function isPrivatePlaceImagesUrl(raw) {
+  return isUnusablePlaceImagesBrowserUrl(raw);
+}
+
+/** Extract object path from a place-images storage URL. */
 export function parsePlaceImagesPath(raw) {
   const value = String(raw ?? "").trim();
   if (!value) return "";
-  const publicMatch = value.match(/\/object\/public\/place-images\/(.+)$/i);
-  if (publicMatch) return decodeURIComponent(publicMatch[1].split("?")[0]);
-  const signMatch = value.match(/\/object\/sign\/place-images\/(.+)$/i);
-  if (signMatch) return decodeURIComponent(signMatch[1].split("?")[0]);
+  const patterns = [
+    /\/object\/public\/place-images\/(.+)$/i,
+    /\/object\/sign\/place-images\/(.+)$/i,
+    /\/object\/place-images\/(.+)$/i,
+    /\/storage\/v1\/object\/place-images\/(.+)$/i,
+  ];
+  for (const pattern of patterns) {
+    const match = value.match(pattern);
+    if (match) return decodeURIComponent(match[1].split("?")[0]);
+  }
   return "";
-}
-
-export function isPrivatePlaceImagesUrl(raw) {
-  const value = String(raw ?? "").trim();
-  return /\/object\/public\/place-images\//i.test(value);
 }
 
 export function isSignedStorageUrl(raw) {
@@ -25,8 +45,10 @@ export function isSignedStorageUrl(raw) {
 
 export function pickUsablePhotoUrl(raw) {
   const value = String(raw ?? "").trim();
+  if (!value) return "";
   if (value.startsWith("blob:")) return value;
   if (isSignedStorageUrl(raw)) return value;
+  if (isUnusablePlaceImagesBrowserUrl(value)) return "";
   return resolveMediaUrl(raw);
 }
 
@@ -34,23 +56,26 @@ export function resolveMediaUrl(raw, { bucket = "place-images" } = {}) {
   const value = String(raw ?? "").trim();
   if (!value) return "";
   if (/^https?:\/\//i.test(value)) {
-    if (isPrivatePlaceImagesUrl(value)) return "";
+    if (isUnusablePlaceImagesBrowserUrl(value)) return "";
     return value;
   }
   if (value.startsWith("/storage/")) {
-    return `https://bscnpilzmilzabagnypx.supabase.co${value}`;
+    const absolute = `https://bscnpilzmilzabagnypx.supabase.co${value}`;
+    if (isUnusablePlaceImagesBrowserUrl(absolute)) return "";
+    return absolute;
   }
   const path = value.replace(/^\/+/, "");
-  if (path.startsWith("storage/v1/object/public/")) {
-    if (path.includes("/place-images/")) return "";
+  if (path.startsWith("storage/v1/object/")) {
+    if (path.includes("/place-images/") && !path.includes("/object/sign/place-images/")) return "";
     return `https://bscnpilzmilzabagnypx.supabase.co/${path}`;
   }
+  if (bucket === "place-images") return "";
   return `${STORAGE_PUBLIC_PREFIX}${bucket}/${path}`;
 }
 
 export function pickDisplayImage(...candidates) {
   for (const candidate of candidates) {
-    const url = resolveMediaUrl(candidate);
+    const url = pickUsablePhotoUrl(candidate);
     if (url) return url;
   }
   return "";

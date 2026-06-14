@@ -1,11 +1,13 @@
 const { parseJsonBody, sendJson } = require("../lib/request");
 const { buildSignedKamiImageUrl } = require("../lib/place-photo-signing");
+const { logPartnerMedia } = require("../lib/partner-media-debug");
 const {
   bearerToken,
   createUserClient,
   createAdminClient,
   pickAnonKey,
   pickSupabaseUrl,
+  pickServiceKey,
 } = require("../lib/supabase-auth");
 
 const SIGNED_URL_TTL_SEC = 60 * 60;
@@ -19,8 +21,11 @@ function normalizePath(path) {
 function isUsablePublicUrl(url) {
   const value = String(url || "").trim();
   if (!value || !/^https?:\/\//i.test(value)) return false;
-  // place-images is private; public object URLs 404 in the browser.
+  // place-images bucket is private — only signed URLs work in <img>.
+  if (/\/object\/sign\/place-images\//i.test(value)) return true;
   if (/\/object\/public\/place-images\//i.test(value)) return false;
+  if (/\/object\/place-images\//i.test(value)) return false;
+  if (/\/storage\/v1\/object\/place-images\//i.test(value)) return false;
   return true;
 }
 
@@ -33,7 +38,19 @@ async function signStorageObject(admin, bucket, path) {
     .from(normalizedBucket)
     .createSignedUrl(normalizedPath, SIGNED_URL_TTL_SEC);
 
-  if (error || !data?.signedUrl) return null;
+  if (error || !data?.signedUrl) {
+    logPartnerMedia("signStorageObject.failed", {
+      bucket: normalizedBucket,
+      path: normalizedPath,
+      error: error?.message || "no_signed_url",
+    });
+    return null;
+  }
+  logPartnerMedia("signStorageObject.ok", {
+    bucket: normalizedBucket,
+    path: normalizedPath,
+    signedUrlLength: data.signedUrl.length,
+  });
   return data.signedUrl;
 }
 
@@ -60,6 +77,13 @@ async function loadApprovedPlaceImages(admin, placeIds) {
 }
 
 module.exports = async function partnerMediaUrls(req, res) {
+  logPartnerMedia("media-urls.request", {
+    hasAnonKey: Boolean(pickAnonKey()),
+    serviceRoleKeyLength: pickServiceKey().length,
+    hasSigningSecret: Boolean(String(process.env.PLACE_PHOTO_SIGNING_SECRET || "").trim()),
+    supabaseUrl: pickSupabaseUrl(),
+  });
+
   if (req.method !== "POST") {
     sendJson(res, 405, { ok: false, error: "method_not_allowed" });
     return;
@@ -110,11 +134,14 @@ module.exports = async function partnerMediaUrls(req, res) {
   }
 
   let admin;
+  let adminError = null;
   try {
     admin = createAdminClient();
-  } catch (_e) {
+  } catch (e) {
     admin = null;
+    adminError = e?.message || "createAdminClient_failed";
   }
+  logPartnerMedia("media-urls.adminClient", { adminCreated: Boolean(admin), adminError });
 
   const signingSecret = String(process.env.PLACE_PHOTO_SIGNING_SECRET || "").trim();
   const supabaseUrl = pickSupabaseUrl();
@@ -129,12 +156,23 @@ module.exports = async function partnerMediaUrls(req, res) {
     if (!placeId) continue;
 
     let url = null;
+    let urlSource = null;
+
+    logPartnerMedia("media-urls.venue.db", {
+      placeId,
+      name: venue.name,
+      photo_storage_bucket: venue.photo_storage_bucket,
+      photo_storage_path: venue.photo_storage_path,
+      photo_url: venue.photo_url,
+      approvedImageRow: imageRows.get(placeId) || null,
+    });
 
     if (signingSecret) {
       url = buildSignedKamiImageUrl(supabaseUrl, signingSecret, placeId, {
         maxHeight: 480,
         maxWidth: 720,
       });
+      if (url) urlSource = "hmac_place_kami_image";
     }
 
     const imageRow = imageRows.get(placeId);
@@ -144,16 +182,20 @@ module.exports = async function partnerMediaUrls(req, res) {
         imageRow.storage_bucket || "place-images",
         imageRow.storage_path
       );
+      if (url) urlSource = "admin_storage_sign";
     }
 
     if (!url && isUsablePublicUrl(venue.photo_url)) {
       url = venue.photo_url;
+      urlSource = "public_photo_url";
     }
 
     if (url) venues[placeId] = url;
+    logPartnerMedia("media-urls.venue.result", { placeId, urlSource, hasUrl: Boolean(url) });
   }
 
   if (!Object.keys(venues).length && !signingSecret && !admin) {
+    logPartnerMedia("media-urls.response", { status: 503, error: "media_not_configured" });
     sendJson(res, 503, { ok: false, error: "media_not_configured" });
     return;
   }
@@ -189,5 +231,10 @@ module.exports = async function partnerMediaUrls(req, res) {
     if (url) events[eventId] = url;
   }
 
+  logPartnerMedia("media-urls.response", {
+    status: 200,
+    venueCount: Object.keys(venues).length,
+    eventCount: Object.keys(events).length,
+  });
   sendJson(res, 200, { ok: true, venues, events, expires_in: SIGNED_URL_TTL_SEC });
 };

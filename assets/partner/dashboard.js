@@ -8,8 +8,9 @@ import {
 } from "./format.js";
 import { renderImageOrFallback } from "./media.js";
 import { wireEditReferralCode } from "../shared/referral-code-edit.js";
-import { enrichPartnerMedia } from "./enrich-media.js?v=20260615c";
+import { enrichPartnerMedia } from "./enrich-media.js?v=20260615d";
 import { pickUsablePhotoUrl } from "./media.js";
+import { partnerMediaDebug } from "./media-debug.js";
 import {
   loadPartnerVenueAnalytics,
   buildInsightsFromDashboard,
@@ -24,8 +25,8 @@ import {
   isValidPortalTab,
   wireAgreementHistory,
   wireNetworkDetails,
-} from "./dashboard-sections.js?v=20260615c";
-import { wireAllVenueVisitHistories } from "./venue-visitors.js?v=20260615d";
+} from "./dashboard-sections.js?v=20260615j";
+import { wireAllVenueVisitHistories } from "./venue-visitors.js?v=20260615j";
 
 function readTabFromUrl() {
   const tab = new URLSearchParams(window.location.search).get("tab");
@@ -126,7 +127,6 @@ function wirePortalTabs(onTabSelect) {
       const tab = btn.getAttribute("data-portal-tab") || "overview";
       if (!isValidPortalTab(tab)) return;
       onTabSelect(tab);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     });
   });
 }
@@ -142,10 +142,24 @@ async function safeRpc(rpc, name, args = {}) {
 function setCardPhoto(
   card,
   url,
-  { fallbackText = "?", imgClass = "venue-photo", fallbackClass = "venue-photo venue-photo-fallback" } = {}
+  {
+    fallbackText = "?",
+    imgClass = "venue-photo",
+    fallbackClass = "venue-photo venue-photo-fallback",
+    placeId = null,
+  } = {}
 ) {
   const usable = pickUsablePhotoUrl(url);
   const existing = card.querySelector(".venue-photo, .venue-photo-fallback, .event-photo, .event-photo-fallback");
+
+  partnerMediaDebug("setCardPhoto", {
+    place_id: placeId,
+    incoming_url: url,
+    final_src: usable || null,
+    has_existing_node: Boolean(existing),
+    skipped: !existing || !usable,
+  });
+
   if (!existing || !usable) return;
 
   const img = document.createElement("img");
@@ -156,6 +170,10 @@ function setCardPhoto(
   img.referrerPolicy = "no-referrer";
   img.dataset.mediaFallback = String(fallbackText || "?")[0] || "?";
   img.onerror = () => {
+    partnerMediaDebug("setCardPhoto.onerror", {
+      place_id: placeId,
+      failed_src: img.src,
+    });
     const fallback = document.createElement("div");
     fallback.className = fallbackClass;
     fallback.textContent = img.dataset.mediaFallback || "?";
@@ -172,7 +190,10 @@ function applyPartnerMedia(root, { dashboard, eventsPayload }) {
     if (!venue?.place_id) continue;
     const card = root.querySelector(`[data-venue-detail="${venue.place_id}"]`)?.closest(".venue-card");
     if (!card) continue;
-    setCardPhoto(card, venue.photo_url, { fallbackText: venue.name || "V" });
+    setCardPhoto(card, venue.photo_url, {
+      fallbackText: venue.name || "V",
+      placeId: venue.place_id,
+    });
   }
 
   for (const event of eventsPayload?.events || []) {
@@ -209,7 +230,7 @@ export async function renderPartnerDashboard(ctx) {
   const activeTab = isValidPortalTab(initialTab) ? initialTab : readTabFromUrl();
   const pid = partnerId;
 
-  const [dashboardResult, referrals, payouts, ledger, history, eventsResult, insightsResult, storeRewardsResult] =
+  const [dashboardResult, referrals, payouts, ledger, history, eventsResult, insightsResult, storeRewardsResult, outreachResult] =
     await Promise.all([
       safeRpc(rpc, "get_my_partner_dashboard", { p_partner_id: pid }),
       safeRpc(rpc, "get_my_partner_referrals", { p_partner_id: pid }),
@@ -219,6 +240,7 @@ export async function renderPartnerDashboard(ctx) {
       safeRpc(rpc, "get_my_partner_events", { p_partner_id: pid }),
       safeRpc(rpc, "get_my_partner_insights", { p_partner_id: pid }),
       safeRpc(rpc, "get_my_partner_store_rewards", { p_partner_id: pid }),
+      safeRpc(rpc, "get_my_partner_outreach_recent", { p_partner_id: pid, p_limit: 20 }),
     ]);
 
   let dashboard = dashboardResult;
@@ -239,6 +261,7 @@ export async function renderPartnerDashboard(ctx) {
   const insights = buildInsightsFromDashboard(dashboard, insightsResult);
   const storeRewards =
     storeRewardsResult?.ok === false ? [] : storeRewardsResult?.rewards || [];
+  const outreach = outreachResult?.ok === false ? { events: [], daily: {} } : outreachResult;
 
   let liveInsights = insights;
 
@@ -317,6 +340,7 @@ export async function renderPartnerDashboard(ctx) {
         venues: liveDashboard.venues,
         events: liveEventsPayload?.events,
         insights: liveInsights,
+        outreach,
         storeRewards,
         referral,
         metrics: liveDashboard.metrics,
@@ -363,7 +387,6 @@ export async function renderPartnerDashboard(ctx) {
         referral.link = link;
       },
     });
-    document.getElementById("logout-btn")?.addEventListener("click", logout);
     wireAgreementHistory(history, { showModal });
     wireLeaveModal(pid, { showModal, hideModal, supabase, onLeft });
   }
@@ -386,6 +409,7 @@ export async function renderPartnerDashboard(ctx) {
         rpc,
         partnerId: pid,
         root: document.getElementById("portal-tab-content"),
+        showModal,
       });
     }
   }
@@ -402,6 +426,7 @@ export async function renderPartnerDashboard(ctx) {
       dashboard: liveDashboard,
       eventsPayload: liveEventsPayload,
     });
+    window.scrollTo({ top: 0, behavior: "auto" });
   }
 
   setRoot(`
