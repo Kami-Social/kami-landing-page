@@ -22,6 +22,38 @@ const MODAL_BODY = document.getElementById("partner-modal-body");
 const MODAL_TITLE = document.getElementById("partner-modal-title");
 const MODAL_CLOSE = document.getElementById("partner-modal-close");
 
+const PARTNER_MARKETING_HASHES = new Set(["#partner-why", "#partner-inquiry"]);
+
+function isPartnerMarketingHash(hash = window.location.hash) {
+  return PARTNER_MARKETING_HASHES.has(hash);
+}
+
+/** @param {boolean} loggedIn */
+function syncPartnerNav(loggedIn = false) {
+  const homeLink = document.querySelector(".partner-nav-home");
+  const marketingLinks = document.querySelectorAll(".partner-nav-marketing");
+  const howLink = document.querySelector('.partner-nav-marketing[href*="partner-why"]');
+  const becomeLink = document.querySelector('.partner-nav-marketing[href*="partner-inquiry"]');
+  const downloadBtn = document.querySelector(".partner-nav-inner .nav-download");
+
+  if (loggedIn) {
+    if (homeLink) homeLink.hidden = false;
+    marketingLinks.forEach((link) => {
+      link.hidden = true;
+    });
+    if (downloadBtn) downloadBtn.textContent = "Download";
+    return;
+  }
+
+  if (homeLink) homeLink.hidden = true;
+  marketingLinks.forEach((link) => {
+    link.hidden = false;
+  });
+  if (howLink) howLink.href = "#partner-why";
+  if (becomeLink) becomeLink.href = "#partner-inquiry";
+  if (downloadBtn) downloadBtn.textContent = "Download Kami";
+}
+
 /** @type {import('@supabase/supabase-js').SupabaseClient | null} */
 let supabase = null;
 let agreementStatus = null;
@@ -141,7 +173,7 @@ function hasLikelyStoredSession() {
   return typeof window.kamiHasLikelyStoredSession === "function" && window.kamiHasLikelyStoredSession();
 }
 
-function renderPublicShell({ misconfigured = false } = {}) {
+function renderPublicShell({ misconfigured = false, loggedIn = false } = {}) {
   const landingReady = Boolean(ROOT?.querySelector(".partner-land"));
 
   if (misconfigured || !landingReady) {
@@ -155,6 +187,7 @@ function renderPublicShell({ misconfigured = false } = {}) {
   }
 
   wirePublicLanding({ wireLoginForm: wirePublicForm });
+  syncPartnerNav(loggedIn);
 }
 
 function wirePublicForm() {
@@ -285,14 +318,20 @@ async function bootstrapSession() {
       <p class="muted">${escapeHtml(error.message)}</p>
       <button class="btn secondary" type="button" id="logout-btn">Log out</button></section>`);
     document.getElementById("logout-btn")?.addEventListener("click", logout);
+    syncPartnerNav(true);
     return;
   }
 
   const state = agreementStatus?.state;
-  if (state === "not_partner") renderNotPartner();
-  else if (state === "agreement_required") renderAgreementFlow();
+  if (state === "not_partner") {
+    if (isPartnerMarketingHash()) {
+      renderPublicShell({ loggedIn: true });
+      return;
+    }
+    renderNotPartner();
+  } else if (state === "agreement_required") renderAgreementFlow();
   else if (state === "dashboard") await renderPortal();
-  else renderPublicShell();
+  else renderPublicShell({ loggedIn: true });
 }
 
 function renderNotPartner() {
@@ -317,6 +356,7 @@ function renderNotPartner() {
       </div>
     </section>
   `);
+  syncPartnerNav(true);
   document.getElementById("logout-btn")?.addEventListener("click", logout);
 }
 
@@ -336,8 +376,11 @@ function renderPartnerSwitcher(memberships, selectedId) {
 
 function renderAgreementPartnerChip(partner) {
   const name = String(partner?.display_name || "Partner").trim() || "Partner";
-  const initial = name[0] || "P";
-  return `<div class="agreement-user-chip"><div class="agreement-user-avatar agreement-user-avatar-fallback" aria-hidden="true">${escapeHtml(initial)}</div><span class="agreement-user-name">${escapeHtml(name)}</span></div>`;
+  const avatarUrl = partner?.avatar_url || partner?.avatarUrl;
+  const avatar = avatarUrl
+    ? `<img class="agreement-user-avatar" src="${escapeHtml(avatarUrl)}" alt="" referrerpolicy="no-referrer" />`
+    : `<div class="agreement-user-avatar agreement-user-avatar-fallback" aria-hidden="true">${escapeHtml(name[0] || "P")}</div>`;
+  return `<div class="agreement-user-chip">${avatar}<span class="agreement-user-name">${escapeHtml(name)}</span></div>`;
 }
 
 function renderAgreementFlow() {
@@ -373,6 +416,7 @@ function renderAgreementFlow() {
 
   wirePartnerSwitcher();
   if (ROOT) wireTermTips(ROOT);
+  syncPartnerNav(true);
   const check = document.getElementById("agree-check");
   const acceptBtn = document.getElementById("accept-btn");
   check?.addEventListener("change", () => {
@@ -697,6 +741,7 @@ async function renderPortal() {
   wirePartnerSwitcher();
   wireTabs();
   wireCopyButtons(dashboard.referral);
+  syncPartnerNav(true);
   document.getElementById("logout-btn")?.addEventListener("click", logout);
 }
 

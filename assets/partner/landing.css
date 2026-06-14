@@ -65,13 +65,13 @@
     font-size: 13px;
   }
 
-  .partner-nav-links .nav-link:nth-child(1) {
+  .partner-nav-marketing[href*="partner-why"] {
     display: none;
   }
 }
 
 @media (max-width: 560px) {
-  .partner-nav-links .nav-link:nth-child(3) {
+  .partner-nav-marketing[href*="partner-login"] {
     display: none;
   }
 }
