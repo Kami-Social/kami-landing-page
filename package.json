@@ -3,7 +3,8 @@
   "private": true,
   "description": "Static public site + minimal Vercel functions",
   "scripts": {
-    "dev": "npx serve -l 3000 ."
+    "dev": "npx serve -l 3000 .",
+    "dev:portal": "vercel dev --listen 3002"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.49.1",

@@ -162,6 +162,40 @@ function renderTermsValueHtml(value) {
   return lines;
 }
 
+export function renderRateTiersHtml(params) {
+  const tiers = parseRateTiers(params);
+  if (tiers.length === 0) {
+    return renderTermsValueHtml(capitalizeWords(formatRateSummary(params)));
+  }
+
+  if (tiers.length === 1) {
+    const only = tiers[0];
+    const count = only?.referral_count;
+    if (count == null || count === "") {
+      return `<span class="terms-value-line">${escapeHtml(formatRateLine(Number(only?.rate_cents || 0)))}</span>`;
+    }
+  }
+
+  return tiers
+    .map((tier, index) => {
+      const rate = formatRateLine(Number(tier?.rate_cents || 0));
+      const count = tier?.referral_count;
+      const tierLabel = `Tier ${index + 1}:`;
+      let rest;
+
+      if (count == null || count === "") {
+        rest = index === 0 ? rate : `${rate} for all remaining Qualified Referrals`;
+      } else if (index === 0) {
+        rest = `${rate} for first ${count} Qualified Referrals`;
+      } else {
+        rest = `${rate} for next ${count} Qualified Referrals`;
+      }
+
+      return `<span class="terms-value-line"><strong>${escapeHtml(tierLabel)}</strong> ${escapeHtml(capitalizeWords(rest))}</span>`;
+    })
+    .join("");
+}
+
 function renderTermCard(id, label, value, tooltip) {
   const displayValue = capitalizeWords(value);
   const lines = renderTermsValueHtml(displayValue);

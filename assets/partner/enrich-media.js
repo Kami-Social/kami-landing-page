@@ -1,8 +1,11 @@
 import { parsePlaceImagesPath, pickUsablePhotoUrl } from "./media.js";
 import { partnerMediaDebug } from "./media-debug.js";
-import { signVenuePhotoUrls } from "./place-photos.js?v=20260615d";
-
-const MEDIA_FETCH_MS = 8000;
+import { signVenuePhotoUrls } from "./place-photos.js?v=20260617e";
+const MEDIA_FETCH_MS =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+    ? 30000
+    : 15000;
 
 async function fetchMediaUrlsFromApi(supabase, partnerId, eventsPayload) {
   const {
@@ -89,17 +92,18 @@ export async function enrichPartnerMedia(supabase, partnerId, dashboard, eventsP
   }
 
   try {
-    const [venueUrls, apiPayload] = await Promise.all([
-      signVenuePhotoUrls(supabase, partnerId, dashboard.venues),
-      fetchMediaUrlsFromApi(supabase, partnerId, eventsPayload),
-    ]);
+    const apiPayload = await fetchMediaUrlsFromApi(supabase, partnerId, eventsPayload);
+    let mergedVenueUrls = { ...(apiPayload?.venues || {}) };
 
-    partnerMediaDebug("enrichPartnerMedia.clientSign", { venueUrls });
+    const missingVenues = (dashboard.venues || []).filter(
+      (venue) => venue?.place_id && !mergedVenueUrls[venue.place_id]
+    );
+    if (missingVenues.length) {
+      const fallbackUrls = await signVenuePhotoUrls(supabase, partnerId, missingVenues);
+      mergedVenueUrls = { ...fallbackUrls, ...mergedVenueUrls };
+    }
 
-    const mergedVenueUrls = {
-      ...venueUrls,
-      ...(apiPayload?.venues || {}),
-    };
+    partnerMediaDebug("enrichPartnerMedia.resolved", { mergedVenueUrls });
     const eventUrls = apiPayload?.events || {};
 
     const enrichedDashboard = {
@@ -107,13 +111,11 @@ export async function enrichPartnerMedia(supabase, partnerId, dashboard, eventsP
       venues: (dashboard.venues || []).map((venue) => {
         const signed =
           mergedVenueUrls[venue.place_id] ||
-          pickUsablePhotoUrl(venueUrls[venue.place_id]) ||
           pickUsablePhotoUrl(apiPayload?.venues?.[venue.place_id]) ||
           null;
         partnerMediaDebug("enrichPartnerMedia.venue.merge", {
           place_id: venue.place_id,
           original_photo_url: venue.photo_url,
-          client_signed: venueUrls[venue.place_id] || null,
           api_signed: apiPayload?.venues?.[venue.place_id] || null,
           final_photo_url: signed,
         });

@@ -6,7 +6,7 @@
   <title>Kami Partner Program | Venues &amp; Local Discovery</title>
   <meta name="description" content="Join the Kami Partner Program. Help people discover places worth showing up for — coffee shops, restaurants, music venues, fitness studios, and community spaces in Austin and beyond." />
   <link rel="icon" href="../assets/k-mark-transparent.png" type="image/png" sizes="any" />
-  <link rel="stylesheet" href="../assets/partner/styles.css" />
+  <link rel="stylesheet" href="../assets/partner/styles.css?v=20260617h" />
   <link rel="stylesheet" href="../assets/download-nav-button.css" />
   <script src="../assets/supabase-browser-public.js"></script>
   <script>
@@ -26,16 +26,23 @@
           <a class="nav-link partner-nav-marketing" href="#partner-inquiry">Become a Partner</a>
           <a class="nav-link partner-nav-marketing" href="#partner-login">Partner Login</a>
         </div>
+        <button type="button" class="btn secondary btn-sm partner-nav-logout" id="partner-nav-logout" hidden aria-hidden="true">Log out</button>
         <a href="/#download" class="btn nav-download">Download Kami</a>
       </div>
     </div>
   </nav>
+  <script>
+    (function () {
+      var logout = document.getElementById("partner-nav-logout");
+      if (logout) logout.hidden = true;
+    })();
+  </script>
 
   <main class="container" id="partner-main">
     <div id="partner-root" aria-live="polite"></div>
   </main>
 
-  <footer id="partner-public-footer">
+  <footer id="partner-public-footer" class="site-footer">
     <div class="nav-container footer-columns">
       <div class="footer-brand">
         <a href="/" aria-label="Kami home">
@@ -51,17 +58,19 @@
         <a href="/store">Store</a>
       </div>
       <div class="footer-col">
-        <h4>Legal</h4>
+        <h4>Company</h4>
         <a href="/privacy">Privacy Policy</a>
         <a href="/terms">Terms of Service</a>
+        <a href="/ambassador">Ambassadors</a>
+        <a href="/partner">Partners</a>
       </div>
       <div class="footer-col">
         <h4>Contact</h4>
         <a href="mailto:hello@kamisocial.com"><strong>hello@kamisocial.com</strong></a>
       </div>
-      <div class="footer-col">
+      <div class="footer-col footer-col-download">
         <h4>Download</h4>
-        <a class="btn footer-download" href="/#download">Download Kami</a>
+        <a class="btn nav-download" href="/#download">Download Kami</a>
       </div>
     </div>
     <div class="copyright">© 2026 Kami Social. All rights reserved.</div>
@@ -81,7 +90,7 @@
 
     const likelyLoggedIn =
       typeof window.kamiHasLikelyStoredSession === "function" &&
-      window.kamiHasLikelyStoredSession();
+      window.kamiHasLikelyStoredSession("partner");
 
     if (!likelyLoggedIn) {
       const root = document.getElementById("partner-root");
@@ -95,7 +104,7 @@
     (function () {
       var root = document.getElementById("partner-root");
       if (!root || typeof window.kamiHasLikelyStoredSession !== "function") return;
-      if (!window.kamiHasLikelyStoredSession()) return;
+      if (!window.kamiHasLikelyStoredSession("partner")) return;
       root.className = "partner-boot-loading amb-boot-loading";
       root.setAttribute("aria-busy", "true");
       root.innerHTML =
@@ -105,6 +114,6 @@
         '</section>';
     })();
   </script>
-  <script type="module" src="../assets/partner/app.js?v=20260615d"></script>
+  <script type="module" src="../assets/partner/app.js?v=20260617k"></script>
 </body>
 </html>

@@ -1,20 +1,35 @@
+/**
+ * Ambassador portal app. Logged-out landing page lives in public-landing.js.
+ * Previous public shell backup: assets/ambassador/archive/public-shell-v20260614.backup.js
+ * Previous dashboard backup: assets/ambassador/archive/dashboard-pre-refresh-v20260617.backup.js
+ */
 import {
   copyText,
   escapeHtml,
-  formatAgreementVersionLabel,
-  formatDate,
   formatDateTime,
   formatLedgerValue,
-  formatMoney,
 } from "./format.js";
+import { renderAgreementTermsSummary, wireTermTips } from "./terms-summary.js";
 import {
-  renderAgreementTermsSummary,
-  renderProgramParametersSnapshot,
-  renderProgramTermsCard,
-  wireTermTips,
-} from "./terms-summary.js";
+  buildHeroMeta,
+  formatCanonicalReferralLink,
+  formatCopyReferralLink,
+  renderAmbassadorDashboardLayout,
+  wireAgreementHistory,
+} from "./dashboard-sections.js";
 import { getAgreement, getCurrentAgreementText } from "./agreements/index.js";
 import { wireEditReferralCode } from "../shared/referral-code-edit.js";
+import {
+  getPortalAuthStorageKey,
+  hasLikelyPortalStoredSession,
+  PORTAL_AUTH_IDS,
+} from "../shared/portal-auth-storage.js";
+import {
+  renderPublicLandingHTML,
+  wirePublicLanding,
+  clearPublicLandingMode,
+  syncSiteFooter,
+} from "./public-landing.js";
 
 const ROOT = document.getElementById("ambassador-root");
 const MODAL = document.getElementById("amb-modal");
@@ -25,6 +40,63 @@ const MODAL_CLOSE = document.getElementById("amb-modal-close");
 /** @type {import('@supabase/supabase-js').SupabaseClient | null} */
 let supabase = null;
 let agreementStatus = null;
+
+/** @param {boolean} loggedIn */
+function syncAmbassadorNav(loggedIn = false) {
+  const homeLink = document.querySelector(".ambassador-nav-home");
+  const marketingLinks = document.querySelectorAll(".ambassador-nav-marketing");
+  const navLogout = document.getElementById("ambassador-nav-logout");
+
+  if (loggedIn) {
+    if (homeLink) homeLink.hidden = false;
+    marketingLinks.forEach((link) => {
+      link.hidden = true;
+    });
+    if (navLogout) {
+      navLogout.hidden = false;
+      navLogout.removeAttribute("aria-hidden");
+    }
+    return;
+  }
+
+  if (homeLink) homeLink.hidden = true;
+  if (navLogout) {
+    navLogout.hidden = true;
+    navLogout.setAttribute("aria-hidden", "true");
+  }
+  marketingLinks.forEach((link) => {
+    link.hidden = false;
+  });
+}
+
+function resetPortalViewport() {
+  if (window.location.hash) {
+    const url = new URL(window.location.href);
+    url.hash = "";
+    window.history.replaceState({}, "", url);
+  }
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+}
+
+function setRoot(html, { publicLanding = false } = {}) {
+  if (!ROOT) return;
+  const leavingPublicLanding =
+    !publicLanding &&
+    (document.body.classList.contains("ambassador-is-public") || Boolean(ROOT.querySelector(".ambassador-land")));
+
+  ROOT.classList.remove("amb-boot-loading");
+  ROOT.removeAttribute("aria-busy");
+  if (publicLanding) {
+    document.body.classList.add("ambassador-is-public");
+  } else {
+    clearPublicLandingMode();
+  }
+  ROOT.innerHTML = html;
+
+  if (leavingPublicLanding) {
+    resetPortalViewport();
+  }
+}
 
 async function loadPublicConfig() {
   const fallbackUrl = "https://bscnpilzmilzabagnypx.supabase.co";
@@ -60,19 +132,13 @@ async function initSupabase() {
   );
   supabase = createClient(cfg.url, cfg.anonKey, {
     auth: {
+      storageKey: getPortalAuthStorageKey(PORTAL_AUTH_IDS.ambassador, cfg.url),
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: false,
     },
   });
   return supabase;
-}
-
-function setRoot(html) {
-  if (!ROOT) return;
-  ROOT.classList.remove("amb-boot-loading");
-  ROOT.removeAttribute("aria-busy");
-  ROOT.innerHTML = html;
 }
 
 function showModal(title, bodyHtml, { titleClass = "" } = {}) {
@@ -151,62 +217,37 @@ if (MODAL) {
   });
 }
 
-function renderPublicShell({ misconfigured = false } = {}) {
-  const misconfiguredHtml = misconfigured
-    ? `<div class="msg err">This page could not load Supabase configuration. Set <strong>SUPABASE_ANON_KEY</strong> on the Vercel project or add the anon key to <code>assets/supabase-browser-public.js</code>.</div>`
-    : "";
+function hasLikelyStoredSession() {
+  const cfg = window.__KAMI_BROWSER_SUPABASE__ || {};
+  const url = String(cfg.url || "https://bscnpilzmilzabagnypx.supabase.co").trim();
+  if (typeof window.kamiHasLikelyStoredSession === "function") {
+    return window.kamiHasLikelyStoredSession(PORTAL_AUTH_IDS.ambassador);
+  }
+  return hasLikelyPortalStoredSession(PORTAL_AUTH_IDS.ambassador, url);
+}
 
-  setRoot(`
-    <section class="hero-block">
-      <img class="hero-logo" src="/assets/k-mark-transparent.png" alt="Kami" width="72" height="72" />
-      <div class="eyebrow">Kami Ambassador Program</div>
-      <h1>Help grow the Kami network.</h1>
-      <p class="hero-copy">Earn rewards for introducing people to Kami and helping build stronger real-world communities.</p>
-      <ul class="hero-benefits" aria-label="Program benefits">
-        <li>
-          <svg class="hero-benefit-icon" viewBox="0 0 24 24" aria-hidden="true"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
-          <span>Referral Rewards</span>
-        </li>
-        <li>
-          <svg class="hero-benefit-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>
-          <span>Early Feature Access</span>
-        </li>
-        <li>
-          <svg class="hero-benefit-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
-          <span>Help Shape Kami</span>
-        </li>
-        <li>
-          <svg class="hero-benefit-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          <span>Grow the Network</span>
-        </li>
-      </ul>
-    </section>
-    <section class="panel login-panel">
-      <h2>Ambassador Login</h2>
-      ${misconfiguredHtml}
-      <form id="login-form" class="stack-form" novalidate>
-        <label for="login-email">Email</label>
-        <input id="login-email" type="email" autocomplete="email" required />
-        <label for="login-password">Password</label>
-        <input id="login-password" type="password" autocomplete="current-password" required />
-        <div id="login-error" class="msg err" hidden role="alert"></div>
-        <button class="btn" type="submit" id="login-submit">Log in</button>
-      </form>
-      <p class="helper-row"><button type="button" class="text-link" id="forgot-password">Forgot password?</button></p>
-      <p class="helper-row">Haven't created a Kami account yet? <a href="/#download">Download Kami</a> and create your account first.</p>
-      <p class="helper-row">Questions? Contact <a href="mailto:ambassadors@kamisocial.com">ambassadors@kamisocial.com</a></p>
-    </section>
-  `);
+function renderPublicShell({ misconfigured = false, loggedIn = false } = {}) {
+  const landingReady = Boolean(ROOT?.querySelector(".ambassador-land"));
 
-  wirePublicForm();
+  if (misconfigured || !landingReady) {
+    setRoot(renderPublicLandingHTML({ misconfigured }), { publicLanding: true });
+  } else {
+    ROOT.classList.remove("amb-boot-loading");
+    ROOT.removeAttribute("aria-busy");
+    document.body.classList.add("ambassador-is-public");
+    syncSiteFooter(true);
+  }
+
+  wirePublicLanding({ wireLoginForm: wirePublicForm });
+  syncAmbassadorNav(loggedIn);
 }
 
 function wirePublicForm() {
   const form = document.getElementById("login-form");
   const err = document.getElementById("login-error");
   const forgot = document.getElementById("forgot-password");
-  if (!form || !supabase) return;
-
+  if (!form || !supabase || form.dataset.loginWired) return;
+  form.dataset.loginWired = "1";
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     if (err) err.hidden = true;
@@ -355,14 +396,23 @@ async function bootstrapSession() {
       <p class="muted">${escapeHtml(error.message)}</p>
       <button class="btn secondary" type="button" id="logout-btn">Log out</button></section>`);
     document.getElementById("logout-btn")?.addEventListener("click", logout);
+    syncAmbassadorNav(true);
     return;
   }
 
   const state = agreementStatus?.state;
-  if (state === "not_ambassador") renderNotAmbassador();
-  else if (state === "agreement_required") renderAgreementFlow();
-  else if (state === "dashboard") await renderDashboard();
-  else renderPublicShell();
+  if (state === "not_ambassador") {
+    renderNotAmbassador();
+    syncAmbassadorNav(true);
+  } else if (state === "agreement_required") {
+    renderAgreementFlow();
+    syncAmbassadorNav(true);
+  } else if (state === "dashboard") {
+    await renderDashboard();
+    syncAmbassadorNav(true);
+  } else {
+    renderPublicShell();
+  }
 }
 
 function renderAgreementUserChip(profile) {
@@ -483,6 +533,71 @@ async function acceptAgreement() {
   await bootstrapSession();
 }
 
+const LEDGER_PAGE_SIZE = 3;
+
+function renderLedgerRow(row) {
+  return `<tr>
+    <td>${formatDateTime(row.date)}</td>
+    <td>${escapeHtml(row.change_type || "—")}</td>
+    <td>${escapeHtml(formatLedgerValue(row.previous_value))}</td>
+    <td>${escapeHtml(formatLedgerValue(row.new_value))}</td>
+    <td>${escapeHtml(row.notes || "")}</td>
+  </tr>`;
+}
+
+function renderLedgerTableBody(entries, offset = 0) {
+  const pageEntries = entries.slice(offset, offset + LEDGER_PAGE_SIZE);
+  if (!pageEntries.length) {
+    return `<tr><td colspan="5" class="empty-cell">No program updates yet.</td></tr>`;
+  }
+  return pageEntries.map(renderLedgerRow).join("");
+}
+
+function renderChangeLedgerPagination(entries, offset = 0) {
+  const total = entries.length;
+  if (total <= LEDGER_PAGE_SIZE) return "";
+
+  const page = Math.floor(offset / LEDGER_PAGE_SIZE) + 1;
+  const totalPages = Math.max(1, Math.ceil(total / LEDGER_PAGE_SIZE));
+  const start = offset + 1;
+  const end = Math.min(offset + LEDGER_PAGE_SIZE, total);
+
+  return `<div class="table-panel-footer">
+    <p class="muted table-panel-range">Showing ${start}–${end} of ${total}</p>
+    <div class="table-panel-pagination">
+      <button type="button" class="btn secondary btn-sm change-ledger-prev" ${offset <= 0 ? "disabled" : ""}>Previous</button>
+      <span class="table-panel-page">Page ${page} of ${totalPages}</span>
+      <button type="button" class="btn secondary btn-sm change-ledger-next" ${offset + LEDGER_PAGE_SIZE >= total ? "disabled" : ""}>Next</button>
+    </div>
+  </div>`;
+}
+
+function wireChangeLedgerPagination(entries) {
+  const section = document.querySelector("[data-change-ledger]");
+  const tbody = section?.querySelector("[data-change-ledger-body]");
+  const footer = section?.querySelector("[data-change-ledger-footer]");
+  if (!section || !tbody || !footer || entries.length <= LEDGER_PAGE_SIZE) return;
+
+  let offset = 0;
+
+  function renderPage() {
+    tbody.innerHTML = renderLedgerTableBody(entries, offset);
+    footer.innerHTML = renderChangeLedgerPagination(entries, offset);
+    footer.querySelector(".change-ledger-prev")?.addEventListener("click", () => {
+      if (offset <= 0) return;
+      offset = Math.max(0, offset - LEDGER_PAGE_SIZE);
+      renderPage();
+    });
+    footer.querySelector(".change-ledger-next")?.addEventListener("click", () => {
+      if (offset + LEDGER_PAGE_SIZE >= entries.length) return;
+      offset += LEDGER_PAGE_SIZE;
+      renderPage();
+    });
+  }
+
+  renderPage();
+}
+
 async function renderDashboard() {
   const [dashboard, referrals, payouts, ledger, history] = await Promise.all([
     rpc("get_my_ambassador_dashboard"),
@@ -503,199 +618,44 @@ async function renderDashboard() {
 
   const h = dashboard.header || {};
   const referral = dashboard.referral || {};
-  const m = dashboard.metrics || {};
+  const referralList = Array.isArray(referrals?.referrals) ? referrals.referrals : [];
+  const payoutList = Array.isArray(payouts?.payouts) ? payouts.payouts : [];
+  const ledgerEntries = Array.isArray(ledger?.ledger) ? ledger.ledger : [];
+  const ledgerTable = renderLedgerTableBody(ledgerEntries, 0);
   const avatar = h.avatar_url
     ? `<img class="avatar" src="${escapeHtml(h.avatar_url)}" alt="" referrerpolicy="no-referrer" />`
     : `<div class="avatar avatar-fallback">${escapeHtml((h.display_name || "K")[0])}</div>`;
+  const heroMeta = buildHeroMeta({
+    header: h,
+    programParameters: dashboard.program_parameters,
+    referrals: referralList,
+    history,
+  });
+  const copyLink = formatCopyReferralLink(referral.code, referral.link);
 
-  const metricsHtml = [
-    ["Current Month Qualified Referrals", String(m.current_month_qualified_referrals ?? 0)],
-    ["Pending Earnings", formatMoney(m.pending_earnings_cents)],
-    ["Approved Earnings", formatMoney(m.approved_earnings_cents)],
-    ["Lifetime Earnings", formatMoney(m.lifetime_earnings_cents)],
-    ["Current Tier Cap", m.monthly_earnings_limit_cents != null ? formatMoney(m.monthly_earnings_limit_cents) : "—"],
-    ["Remaining Before Tier Cap", m.remaining_eligible_earnings_cents != null ? formatMoney(m.remaining_eligible_earnings_cents) : "—"],
-    ["Paid This Month", formatMoney(m.paid_this_month_cents)],
-    ["Total Paid Lifetime", formatMoney(m.total_paid_lifetime_cents)],
-  ]
-    .map(
-      ([label, value]) =>
-        `<article class="metric-card"><p class="metric-label">${escapeHtml(label)}</p><p class="metric-value">${escapeHtml(value)}</p></article>`
-    )
-    .join("");
+  document.body.classList.add("ambassador-dashboard");
 
-  const referralRows = (referrals?.referrals || [])
-    .map((row) => {
-      const avatarCell = row.avatar_url
-        ? `<img class="table-avatar" src="${escapeHtml(row.avatar_url)}" alt="" referrerpolicy="no-referrer" />`
-        : `<span class="table-avatar table-avatar-fallback">${escapeHtml((row.name || "?")[0])}</span>`;
-      return `<tr>
-        <td>${formatDate(row.date)}</td>
-        <td><span class="name-cell">${avatarCell}<span>${escapeHtml(row.name)}</span></span></td>
-        <td>${escapeHtml(row.handle || "—")}</td>
-        <td><span class="status-pill">${escapeHtml(row.qualification_status)}</span></td>
-        <td>${escapeHtml(row.applied_rate || "—")}</td>
-        <td>${formatMoney(row.earnings_cents)}</td>
-        <td class="muted-col">${escapeHtml(row.reason || "")}</td>
-      </tr>`;
+  setRoot(
+    renderAmbassadorDashboardLayout({
+      header: h,
+      avatarHtml: avatar,
+      heroMeta,
+      referral,
+      metrics: dashboard.metrics || {},
+      programParameters: dashboard.program_parameters,
+      referrals: referralList,
+      payouts: payoutList,
+      ledgerTable,
+      ledgerEntries,
+      history,
     })
-    .join("");
-
-  const referralsTable =
-    referralRows ||
-    `<tr><td colspan="7" class="empty-cell">No referrals yet. Share your referral link to start building your Kami network.</td></tr>`;
-
-  const payoutRows = (payouts?.payouts || [])
-    .map(
-      (row) => `<tr>
-      <td>${escapeHtml(row.period || "—")}</td>
-      <td>${row.qualified_referrals ?? "—"}</td>
-      <td>${formatMoney(row.gross_earnings_cents)}</td>
-      <td>${formatMoney(row.adjustments_cents)}</td>
-      <td>${formatMoney(row.approved_amount_cents)}</td>
-      <td>${formatMoney(row.paid_amount_cents)}</td>
-      <td>${formatDate(row.paid_date)}</td>
-      <td>${escapeHtml(row.status || "—")}</td>
-      <td>${escapeHtml(row.notes || "")}</td>
-    </tr>`
-    )
-    .join("");
-
-  const payoutTable =
-    payoutRows ||
-    `<tr><td colspan="9" class="empty-cell">No payout records yet.</td></tr>`;
-
-  const referralLink = String(referral.link || "").trim();
-  const referralLinkHtml = referralLink
-    ? `<a class="copy-value copy-value-link" id="ref-link" href="${escapeHtml(referralLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(referralLink)}</a>`
-    : `<p class="copy-value copy-value-link" id="ref-link">—</p>`;
-
-  const ledgerRows = (ledger?.ledger || [])
-    .map(
-      (row) => `<tr>
-      <td>${formatDateTime(row.date)}</td>
-      <td>${escapeHtml(row.change_type || "—")}</td>
-      <td>${escapeHtml(formatLedgerValue(row.previous_value))}</td>
-      <td>${escapeHtml(formatLedgerValue(row.new_value))}</td>
-      <td>${escapeHtml(row.notes || "")}</td>
-    </tr>`
-    )
-    .join("");
-
-  const ledgerTable =
-    ledgerRows || `<tr><td colspan="5" class="empty-cell">No change history yet.</td></tr>`;
-
-  const currentAgreement = history?.current_agreement;
-  const historical = history?.historical_agreements || [];
-
-  const currentAgreementHtml = currentAgreement
-    ? `<div class="history-card">
-        <p><strong>Version:</strong> ${escapeHtml(formatAgreementVersionLabel(currentAgreement.version))}</p>
-        <p><strong>Accepted:</strong> ${formatDateTime(currentAgreement.accepted_at)}</p>
-        <button type="button" class="btn secondary btn-sm" data-view-agreement="current">View Agreement</button>
-        <button type="button" class="btn secondary btn-sm" data-view-params="current">View Program Parameters Snapshot</button>
-      </div>`
-    : `<p class="muted">No current agreement acceptance on file.</p>`;
-
-  const historicalHtml = historical.length
-    ? historical
-        .map(
-          (item, idx) => `<div class="history-card">
-          <p><strong>Version:</strong> ${escapeHtml(formatAgreementVersionLabel(item.version))}</p>
-          <p><strong>Accepted:</strong> ${formatDateTime(item.accepted_at)}</p>
-          <button type="button" class="btn secondary btn-sm" data-view-agreement="hist-${idx}">View Agreement Snapshot</button>
-          <button type="button" class="btn secondary btn-sm" data-view-params="hist-${idx}">View Program Parameters Snapshot</button>
-        </div>`
-        )
-        .join("")
-    : `<p class="muted">No historical agreements.</p>`;
-
-  setRoot(`
-    <section class="panel dashboard-header">
-      <div class="dashboard-header-main">
-        <div class="eyebrow dashboard-eyebrow">Ambassador Dashboard</div>
-        <div class="header-main">
-          ${avatar}
-          <div class="header-copy">
-            <h1>${escapeHtml(h.display_name || "Ambassador")}</h1>
-            <p class="muted">${escapeHtml(h.handle ? `@${h.handle}` : "")}${h.email ? ` · ${escapeHtml(h.email)}` : ""}</p>
-          </div>
-        </div>
-      </div>
-      <span class="status-badge">${escapeHtml(h.status_label || "Ambassador")}</span>
-    </section>
-
-    <section class="panel">
-      <h2>Referral Link</h2>
-      <div class="copy-grid">
-        <div>
-          <label>Referral Code</label>
-          <p class="copy-value" id="ref-code">${escapeHtml(referral.code || "—")}</p>
-          <div class="btn-row">
-            <button type="button" class="btn secondary" id="copy-code">Copy Code</button>
-            <button type="button" class="btn secondary" id="edit-code">Edit Code</button>
-          </div>
-        </div>
-        <div>
-          <label>Referral Link</label>
-          ${referralLinkHtml}
-          <div class="btn-row">
-            <button type="button" class="btn secondary" id="copy-link">Copy Link</button>
-          </div>
-        </div>
-      </div>
-      <p class="helper-row">Share your referral link with people you think would enjoy Kami. Qualified Referrals are determined by the current qualification criteria shown below.</p>
-    </section>
-
-    <section class="panel"><h2>Metrics</h2><div class="metrics-grid">${metricsHtml}</div></section>
-    <section class="panel"><h2>Current Program Terms</h2>${renderProgramTermsCard(dashboard.program_parameters)}</section>
-
-    <section class="panel table-panel">
-      <h2>Referrals</h2>
-      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Name</th><th>Handle</th><th>Status</th><th>Rate/Tier</th><th>Earnings</th><th>Notes</th></tr></thead><tbody>${referralsTable}</tbody></table></div>
-    </section>
-
-    <section class="panel table-panel">
-      <h2>Payout History</h2>
-      <div class="table-wrap"><table><thead><tr><th>Period</th><th>Qualified</th><th>Gross</th><th>Adjustments</th><th>Approved</th><th>Paid</th><th>Paid Date</th><th>Status</th><th>Notes</th></tr></thead><tbody>${payoutTable}</tbody></table></div>
-    </section>
-
-    <section class="panel table-panel">
-      <h2>Change Ledger</h2>
-      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Change Type</th><th>Previous</th><th>New</th><th>Notes</th></tr></thead><tbody>${ledgerTable}</tbody></table></div>
-    </section>
-
-    <section class="panel">
-      <h2>Agreement History</h2>
-      <h3>Current Agreement</h3>
-      ${currentAgreementHtml}
-      <details class="history-collapsible">
-        <summary class="history-collapsible-summary">Historical Agreements${historical.length ? ` (${historical.length})` : ""}</summary>
-        ${historicalHtml}
-      </details>
-    </section>
-
-    <section class="panel">
-      <h2>Support</h2>
-      <p>Questions or issues? Contact <a href="mailto:ambassadors@kamisocial.com">ambassadors@kamisocial.com</a>.</p>
-    </section>
-
-    <section class="panel danger-panel">
-      <h2>Leave Ambassador Program</h2>
-      <p class="muted">You will stop earning compensation for future referrals. Previously approved earnings remain eligible for payout under the Program Agreement.</p>
-      <button type="button" class="btn secondary btn-danger-outline" id="leave-open">Leave Ambassador Program</button>
-    </section>
-
-    <section class="panel centered-panel">
-      <button type="button" class="btn secondary" id="logout-btn">Log out</button>
-    </section>
-  `);
+  );
 
   document.getElementById("copy-code")?.addEventListener("click", (ev) =>
     copyText(referral.code, ev.currentTarget)
   );
   document.getElementById("copy-link")?.addEventListener("click", (ev) =>
-    copyText(referral.link, ev.currentTarget)
+    copyText(copyLink, ev.currentTarget)
   );
   wireEditReferralCode({
     rpc,
@@ -704,47 +664,22 @@ async function renderDashboard() {
     currentCode: referral.code,
     onUpdated: ({ code, link }) => {
       referral.code = code;
-      referral.link = link;
+      referral.link = link || formatCopyReferralLink(code);
+      const linkEl = document.getElementById("ref-link");
+      const display = formatCanonicalReferralLink(code);
+      if (linkEl && display) {
+        if (linkEl.tagName === "A") {
+          linkEl.href = formatCopyReferralLink(code, link);
+          linkEl.textContent = display;
+        } else {
+          linkEl.textContent = display;
+        }
+      }
     },
   });
   document.getElementById("logout-btn")?.addEventListener("click", logout);
-
-  if (currentAgreement) {
-    document.querySelector('[data-view-agreement="current"]')?.addEventListener("click", () =>
-      showModal(
-        formatAgreementVersionLabel(currentAgreement.version),
-        `<pre class="modal-pre">${escapeHtml(currentAgreement.agreement_snapshot)}</pre>`
-      )
-    );
-    document.querySelector('[data-view-params="current"]')?.addEventListener("click", () =>
-      showModal(
-        "Program Parameters Snapshot",
-        renderProgramParametersSnapshot(currentAgreement.program_parameters_snapshot, {
-          payout_threshold_display: currentAgreement.payout_threshold_display,
-          tier_cap_display: currentAgreement.tier_cap_display,
-        })
-      )
-    );
-  }
-
-  historical.forEach((item, idx) => {
-    document.querySelector(`[data-view-agreement="hist-${idx}"]`)?.addEventListener("click", () =>
-      showModal(
-        formatAgreementVersionLabel(item.version),
-        `<pre class="modal-pre">${escapeHtml(item.agreement_snapshot)}</pre>`
-      )
-    );
-    document.querySelector(`[data-view-params="hist-${idx}"]`)?.addEventListener("click", () =>
-      showModal(
-        `Parameters ${formatAgreementVersionLabel(item.version)}`,
-        renderProgramParametersSnapshot(item.program_parameters_snapshot, {
-          payout_threshold_display: item.payout_threshold_display,
-          tier_cap_display: item.tier_cap_display,
-        })
-      )
-    );
-  });
-
+  wireAgreementHistory(history, { showModal });
+  wireChangeLedgerPagination(ledgerEntries);
   wireLeaveModal(history);
 }
 
@@ -811,17 +746,35 @@ async function submitLeave() {
 async function logout() {
   if (supabase) await supabase.auth.signOut();
   agreementStatus = null;
+  document.body.classList.remove("ambassador-dashboard");
   renderPublicShell();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 (async function main() {
+  syncAmbassadorNav(false);
+
+  const likelyLoggedIn = hasLikelyStoredSession();
+  if (!likelyLoggedIn) {
+    renderPublicShell();
+  }
+
+  document.getElementById("ambassador-nav-logout")?.addEventListener("click", logout);
+
   const client = await initSupabase();
   if (!client) return;
 
   const { data } = await client.auth.getSession();
-  if (data?.session) await bootstrapSession();
-  else renderPublicShell();
+  if (data?.session) {
+    await bootstrapSession();
+  } else {
+    syncAmbassadorNav(false);
+    if (likelyLoggedIn) {
+      renderPublicShell();
+    } else {
+      wirePublicForm();
+    }
+  }
 
   client.auth.onAuthStateChange((event, session) => {
     if (event === "INITIAL_SESSION") return;

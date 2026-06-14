@@ -81,9 +81,40 @@ function parseLedgerObject(value) {
   return null;
 }
 
+function humanizeLedgerKey(key) {
+  return humanizeKey(String(key || "").replace(/_cents$/i, ""));
+}
+
+function formatLedgerFieldValue(key, value) {
+  if (value == null || value === "") return "—";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (/_cents$/i.test(String(key)) && (typeof value === "number" || /^-?\d+$/.test(String(value)))) {
+    return formatMoney(value);
+  }
+  return humanizeScalar(value);
+}
+
+function formatRateTiers(tiers) {
+  if (!Array.isArray(tiers) || !tiers.length) return "—";
+  return tiers
+    .map((tier) => {
+      if (!tier || typeof tier !== "object") return null;
+      const rate = formatMoney(tier.rate_cents);
+      const count = tier.referral_count;
+      if (count == null || count === "") return `Default: ${rate}`;
+      return `${count}+ referrals: ${rate}`;
+    })
+    .filter(Boolean)
+    .join(" · ");
+}
+
 function formatLedgerObject(obj) {
   if (obj.agreement_version) {
     return formatAgreementVersionLabel(obj.agreement_version);
+  }
+
+  if (Array.isArray(obj.rate_tiers)) {
+    return formatRateTiers(obj.rate_tiers);
   }
 
   const parts = [];
@@ -93,11 +124,16 @@ function formatLedgerObject(obj) {
     parts.push(humanizeScalar(obj.status));
   }
 
-  const ignored = new Set(["acceptance_id", "program_status", "status"]);
+  const ignored = new Set(["acceptance_id", "program_status", "status", "rate_tiers"]);
   for (const [key, value] of Object.entries(obj)) {
     if (ignored.has(key) || value == null || value === "") continue;
-    if (typeof value === "object") continue;
-    parts.push(`${humanizeKey(key)}: ${humanizeScalar(value)}`);
+    if (typeof value === "object") {
+      if (key === "rate_schedule" && Array.isArray(value.rate_tiers)) {
+        parts.push(formatRateTiers(value.rate_tiers));
+      }
+      continue;
+    }
+    parts.push(`${humanizeLedgerKey(key)}: ${formatLedgerFieldValue(key, value)}`);
   }
 
   return parts.length ? parts.join(" · ") : "—";

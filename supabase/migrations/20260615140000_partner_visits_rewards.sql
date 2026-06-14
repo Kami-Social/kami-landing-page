@@ -139,7 +139,14 @@ begin
       v.last_status,
       greatest(
         1,
-        round(extract(epoch from (v.last_seen_at - v.first_seen_at)) / 60.0)
+        round(
+          extract(epoch from (
+            case
+              when v.is_active_now then now() - v.first_seen_at
+              else v.last_seen_at - v.first_seen_at
+            end
+          )) / 60.0
+        )
       )::bigint as stay_minutes
     from visits v
     join public.users u on u.id = v.user_id

@@ -9,50 +9,12 @@ const {
   pickSupabaseUrl,
   pickServiceKey,
 } = require("../lib/supabase-auth");
-
-const SIGNED_URL_TTL_SEC = 60 * 60;
-
-function normalizePath(path) {
-  return String(path || "")
-    .trim()
-    .replace(/^\/+/, "");
-}
-
-function isUsablePublicUrl(url) {
-  const value = String(url || "").trim();
-  if (!value || !/^https?:\/\//i.test(value)) return false;
-  // place-images bucket is private — only signed URLs work in <img>.
-  if (/\/object\/sign\/place-images\//i.test(value)) return true;
-  if (/\/object\/public\/place-images\//i.test(value)) return false;
-  if (/\/object\/place-images\//i.test(value)) return false;
-  if (/\/storage\/v1\/object\/place-images\//i.test(value)) return false;
-  return true;
-}
-
-async function signStorageObject(admin, bucket, path) {
-  const normalizedBucket = String(bucket || "").trim();
-  const normalizedPath = normalizePath(path);
-  if (!normalizedBucket || !normalizedPath) return null;
-
-  const { data, error } = await admin.storage
-    .from(normalizedBucket)
-    .createSignedUrl(normalizedPath, SIGNED_URL_TTL_SEC);
-
-  if (error || !data?.signedUrl) {
-    logPartnerMedia("signStorageObject.failed", {
-      bucket: normalizedBucket,
-      path: normalizedPath,
-      error: error?.message || "no_signed_url",
-    });
-    return null;
-  }
-  logPartnerMedia("signStorageObject.ok", {
-    bucket: normalizedBucket,
-    path: normalizedPath,
-    signedUrlLength: data.signedUrl.length,
-  });
-  return data.signedUrl;
-}
+const {
+  SIGNED_URL_TTL_SEC,
+  isUsablePublicUrl,
+  signStorageObject,
+  resolvePartnerPlaceImageUrl,
+} = require("../lib/partner-place-image-resolve");
 
 async function loadApprovedPlaceImages(admin, placeIds) {
   if (!placeIds.length) return new Map();
@@ -155,9 +117,6 @@ module.exports = async function partnerMediaUrls(req, res) {
     const placeId = venue.place_id;
     if (!placeId) continue;
 
-    let url = null;
-    let urlSource = null;
-
     logPartnerMedia("media-urls.venue.db", {
       placeId,
       name: venue.name,
@@ -167,28 +126,15 @@ module.exports = async function partnerMediaUrls(req, res) {
       approvedImageRow: imageRows.get(placeId) || null,
     });
 
-    if (signingSecret) {
-      url = buildSignedKamiImageUrl(supabaseUrl, signingSecret, placeId, {
-        maxHeight: 480,
-        maxWidth: 720,
-      });
-      if (url) urlSource = "hmac_place_kami_image";
-    }
-
-    const imageRow = imageRows.get(placeId);
-    if (!url && imageRow && admin) {
-      url = await signStorageObject(
-        admin,
-        imageRow.storage_bucket || "place-images",
-        imageRow.storage_path
-      );
-      if (url) urlSource = "admin_storage_sign";
-    }
-
-    if (!url && isUsablePublicUrl(venue.photo_url)) {
-      url = venue.photo_url;
-      urlSource = "public_photo_url";
-    }
+    const { url, source: urlSource } = await resolvePartnerPlaceImageUrl({
+      supabaseUrl,
+      signingSecret,
+      placeId,
+      venue,
+      imageRow: imageRows.get(placeId),
+      admin,
+      userClient,
+    });
 
     if (url) venues[placeId] = url;
     logPartnerMedia("media-urls.venue.result", { placeId, urlSource, hasUrl: Boolean(url) });

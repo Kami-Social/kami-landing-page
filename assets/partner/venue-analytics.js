@@ -129,6 +129,17 @@ export function buildInsightsFromDashboard(dashboard, insightsResult) {
 export function buildInsightsPayload(baseInsights, venueAnalytics, venues) {
   const venueList = Array.isArray(venues) ? venues : [];
   const metricsFromRpc = venueAnalyticsToMetricsMap(venueAnalytics);
+  const baseMetrics = Array.isArray(baseInsights?.venue_metrics) ? baseInsights.venue_metrics : [];
+  const pointsByPlace = new Map(
+    baseMetrics.filter((row) => row?.place_id).map((row) => [row.place_id, row.points_earned_30d])
+  );
+
+  for (const [placeId, row] of metricsFromRpc.entries()) {
+    if (row.points_earned_30d == null && pointsByPlace.has(placeId)) {
+      row.points_earned_30d = pointsByPlace.get(placeId);
+    }
+  }
+
   const venueMetrics = Array.from(metricsFromRpc.values());
   const agg = aggregateVenueAnalytics(venueAnalytics);
 
@@ -136,10 +147,11 @@ export function buildInsightsPayload(baseInsights, venueAnalytics, venues) {
   const baseInsightsData = base.insights && typeof base.insights === "object" ? base.insights : {};
   const mergedVenueMetrics =
     venueMetrics.length > 0
-      ? venueMetrics
-      : Array.isArray(base.venue_metrics)
-        ? base.venue_metrics
-        : [];
+      ? venueMetrics.map((row) => {
+          if (row.points_earned_30d != null || !pointsByPlace.has(row.place_id)) return row;
+          return { ...row, points_earned_30d: pointsByPlace.get(row.place_id) };
+        })
+      : baseMetrics;
 
   return {
     ...base,

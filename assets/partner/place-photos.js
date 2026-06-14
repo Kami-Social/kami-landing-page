@@ -92,25 +92,25 @@ export async function resolveVenuePhotoUrl(supabase, venue, partnerId) {
     rawPhotoUrl: venue.photo_url,
   });
 
-  if (path) {
-    const blobUrl = await downloadStorageBlob(supabase, bucket, path);
-    if (blobUrl) {
-      partnerMediaDebug("resolveVenuePhotoUrl.result", { placeId, source: "blob_download" });
-      return blobUrl;
-    }
-
-    const signed = await signStoragePath(supabase, bucket, path);
-    if (signed) {
-      partnerMediaDebug("resolveVenuePhotoUrl.result", { placeId, source: "client_signed_url" });
-      return signed;
-    }
-  }
-
   if (partnerId && placeId) {
     const apiUrl = await fetchSignedKamiImageFromApi(supabase, partnerId, placeId);
     if (apiUrl) {
       partnerMediaDebug("resolveVenuePhotoUrl.result", { placeId, source: "place_photo_api" });
       return apiUrl;
+    }
+  }
+
+  if (path) {
+    const signed = await signStoragePath(supabase, bucket, path);
+    if (signed) {
+      partnerMediaDebug("resolveVenuePhotoUrl.result", { placeId, source: "client_signed_url" });
+      return signed;
+    }
+
+    const blobUrl = await downloadStorageBlob(supabase, bucket, path);
+    if (blobUrl) {
+      partnerMediaDebug("resolveVenuePhotoUrl.result", { placeId, source: "blob_download" });
+      return blobUrl;
     }
   }
 

@@ -11,6 +11,7 @@ import {
   renderProgramParametersSnapshot,
   renderProgramTermsCard,
 } from "./terms-summary.js";
+import { renderConnectionAction, renderUserIdentityCell } from "./venue-visitors.js?v=20260617k";
 
 const PORTAL_TABS = ["overview", "venues", "events"];
 
@@ -78,6 +79,31 @@ function renderSummaryStat(label, value) {
   </article>`;
 }
 
+function renderHeroPill(label, value) {
+  return `<span class="hero-summary-pill"><span class="hero-summary-pill-label">${escapeHtml(label)}</span><span class="hero-summary-pill-value">${escapeHtml(value)}</span></span>`;
+}
+
+function renderPortalSectionGroup(title, bodyHtml) {
+  return `<div class="portal-section-group">
+    <h2 class="portal-section-group-title">${escapeHtml(title)}</h2>
+    <div class="portal-section-group-body">${bodyHtml}</div>
+  </div>`;
+}
+
+function renderMetricChip(label, value) {
+  return `<article class="metric-chip">
+    <p class="metric-chip-label">${escapeHtml(label)}</p>
+    <p class="metric-chip-value">${escapeHtml(value)}</p>
+  </article>`;
+}
+
+function renderMetricStrip(items) {
+  const chips = items
+    .map(([label, value]) => renderMetricChip(label, value))
+    .join("");
+  return `<div class="metric-strip">${chips}</div>`;
+}
+
 function resolveVenueMetrics(venue, metricsByPlace) {
   const fromMap = metricsByPlace?.get?.(venue?.place_id);
   return {
@@ -90,6 +116,8 @@ function resolveVenueMetrics(venue, metricsByPlace) {
       fromMap?.visitors_this_month ?? venue?.visitors_this_month ?? null,
     busiest_day: fromMap?.busiest_day ?? venue?.busiest_day ?? null,
     busiest_hour: fromMap?.busiest_hour ?? venue?.busiest_hour ?? null,
+    points_earned_30d:
+      fromMap?.points_earned_30d ?? venue?.points_earned_30d ?? null,
   };
 }
 
@@ -108,6 +136,20 @@ function formatRepeatVisitors(metrics) {
   if (Number.isNaN(unique) || Number.isNaN(firstTime)) return "—";
   if (unique === 0 && firstTime === 0) return "0";
   return String(Math.max(unique - firstTime, 0));
+}
+
+function venueHasRealStoreRewards(venue) {
+  const rewards = Array.isArray(venue?.store_rewards) ? venue.store_rewards : [];
+  return rewards.some((row) => row && (row.name || row.title || row.reward_name));
+}
+
+function renderVenueStoreRewardsSection(venue) {
+  if (!venueHasRealStoreRewards(venue)) return "";
+
+  return `<div class="venue-card-section">
+    <h4 class="venue-card-section-title">Store Rewards</h4>
+    ${renderVenueStoreRewards(venue)}
+  </div>`;
 }
 
 function renderVenueStoreRewards(venue) {
@@ -146,7 +188,6 @@ function renderVenueStoreRewards(venue) {
 
 function renderConsolidatedVenueCard(venue, metricsByPlace) {
   const metrics = resolveVenueMetrics(venue, metricsByPlace);
-  const hasActivity = venueHasActivity(metrics);
   const photo = renderImageOrFallback({
     url: venue.photo_url,
     fallbackText: venue.name || "V",
@@ -163,62 +204,52 @@ function renderConsolidatedVenueCard(venue, metricsByPlace) {
     ? `<p class="venue-address muted">${escapeHtml(venue.address)}</p>`
     : `<p class="venue-address muted">${escapeHtml(formatLocation(venue))}</p>`;
 
-  const analyticsHtml = `<div class="analytics-metrics-grid analytics-metrics-grid--compact">
-    ${renderInsightCard("Visitors This Month", formatMetric(metrics.visitors_this_month, { emptyLabel: "0" }))}
-    ${renderInsightCard("Unique Kami Visitors", formatMetric(metrics.unique_visitors_30d, { emptyLabel: "0" }))}
-    ${renderInsightCard("Repeat Visitors", formatRepeatVisitors(metrics))}
-    ${renderInsightCard("First-Time Visitors", formatMetric(metrics.first_time_visitors_30d, { emptyLabel: "0" }))}
-    ${renderInsightCard("Points Earned at Venue", "—")}
-  </div>`;
+  const performanceHtml = renderMetricStrip([
+    ["Unique visitors", formatMetric(metrics.unique_visitors_30d, { emptyLabel: "0" })],
+    ["First-time visitors", formatMetric(metrics.first_time_visitors_30d, { emptyLabel: "0" })],
+    ["Total visits", formatMetric(metrics.total_visits_30d, { emptyLabel: "0" })],
+    ["Repeat visitors", formatRepeatVisitors(metrics)],
+    ["Points earned", formatMetric(metrics.points_earned_30d, { emptyLabel: "0" })],
+  ]);
 
-  const activityHtml = hasActivity
-    ? `<div class="activity-list activity-list--compact">
-        <div class="activity-row">
-          <span class="activity-label">Total visits (30d)</span>
-          <span class="activity-value">${escapeHtml(formatMetric(metrics.total_visits_30d, { emptyLabel: "0" }))}</span>
-        </div>
-        <div class="activity-row">
-          <span class="activity-label">Unique Kami visitors (30d)</span>
-          <span class="activity-value">${escapeHtml(formatMetric(metrics.unique_visitors_30d, { emptyLabel: "0" }))}</span>
-        </div>
-        <div class="activity-row">
-          <span class="activity-label">First-time visitors (30d)</span>
-          <span class="activity-value">${escapeHtml(formatMetric(metrics.first_time_visitors_30d, { emptyLabel: "0" }))}</span>
-        </div>
-      </div>`
-    : `<p class="muted venue-card-empty">No recent Kami activity detected yet.</p>`;
-
-  return `<article class="venue-card venue-card--consolidated">
-    <div class="venue-card-header">
-      ${photo}
-      <div class="venue-card-content">
-        <h3>${escapeHtml(venue.name || "Venue")}</h3>
-        <p class="venue-meta">${escapeHtml(formatCategory(venue))}</p>
-        ${addressLine}
-        <div class="venue-badges">${activeBadge}${publishedBadge}</div>
-        <div class="venue-card-actions">
-          <button type="button" class="btn secondary btn-sm" data-venue-detail="${escapeHtml(venue.place_id || "")}">View Details</button>
+  return `<article class="venue-card venue-card--consolidated" data-place-id="${escapeHtml(venue.place_id || "")}">
+    <div class="venue-card-section venue-card-section--info">
+      <h4 class="venue-card-section-title">Venue Info</h4>
+      <div class="venue-card-header">
+        ${photo}
+        <div class="venue-card-content">
+          <h3>${escapeHtml(venue.name || "Venue")}</h3>
+          <p class="venue-meta">${escapeHtml(formatCategory(venue))}</p>
+          ${addressLine}
+          <div class="venue-badges">${activeBadge}${publishedBadge}</div>
+          <div class="venue-card-actions">
+            <button type="button" class="btn secondary btn-sm" data-venue-detail="${escapeHtml(venue.place_id || "")}">View Details</button>
+          </div>
         </div>
       </div>
     </div>
     <div class="venue-card-section">
-      <h4 class="venue-card-section-title">Analytics</h4>
-      <p class="muted venue-card-section-lede">Aggregate 30-day performance. Individual user identities are never shown.</p>
-      ${analyticsHtml}
-    </div>
-    <div class="venue-card-section">
-      <h4 class="venue-card-section-title">Recent Kami Activity</h4>
-      ${activityHtml}
+      <h4 class="venue-card-section-title">Performance</h4>
+      <p class="muted venue-card-section-lede">Aggregate 30-day activity. Individual user identities are never shown.</p>
+      ${performanceHtml}
     </div>
     <div class="venue-card-section venue-card-section--visitors">
+      <h4 class="venue-card-section-title">Recent Visitors</h4>
       <div data-venue-visitors="${escapeHtml(venue.place_id || "")}">
         <p class="muted venue-card-empty">Loading visitors…</p>
       </div>
     </div>
+    <div class="venue-card-section venue-card-section--wall">
+      <h4 class="venue-card-section-title">Venue Wall</h4>
+      <div data-venue-wall="${escapeHtml(venue.place_id || "")}">
+        <p class="muted venue-card-empty">Loading wall…</p>
+      </div>
+    </div>
+    ${renderVenueStoreRewardsSection(venue)}
   </article>`;
 }
 
-function renderEventCard(event) {
+function renderConsolidatedEventCard(event, insights) {
   const location = [event.place_name, event.place_neighborhood, event.place_city].filter(Boolean).join(" · ");
   const timing = eventTimingState(event);
   const image = renderImageOrFallback({
@@ -232,37 +263,77 @@ function renderEventCard(event) {
       ? `<span class="venue-badge is-good">Published</span>`
       : `<span class="venue-badge is-warn">${escapeHtml(event.status || "Draft")}</span>`;
   const timingBadge = `<span class="venue-badge is-${timing.tone}">${escapeHtml(timing.label)}</span>`;
+  const eventVisits = formatMetric(insights?.insights?.event_visits_30d, { emptyLabel: "0" });
+  const hasEventRewards = venueHasRealStoreRewards(event);
 
-  return `<article class="event-card event-card--with-photo event-card--rich">
-    ${image}
-    <div class="event-card-body">
-      <h3>${escapeHtml(event.name || "Event")}</h3>
-      <p class="event-meta">
-        ${escapeHtml(formatDateTime(event.starts_at))}${event.ends_at ? ` – ${escapeHtml(formatDateTime(event.ends_at))}` : ""}<br>
-        ${escapeHtml(location || "Venue not listed")}<br>
-        ${statusBadge} ${timingBadge}
-      </p>
-      <div class="venue-card-actions">
-        <button type="button" class="btn secondary btn-sm" data-event-detail="${escapeHtml(event.event_id || "")}">View Details</button>
-      </div>
-    </div>
-  </article>`;
-}
+  const performanceHtml = renderMetricStrip([
+    ["Event visits (30d)", eventVisits],
+    ["Unique visitors", "—"],
+    ["First-time visitors", "—"],
+    ["Repeat visitors", "—"],
+    ["Points earned", "—"],
+  ]);
 
-export function renderPartnerHero(header, avatarHtml) {
-  const h = header || {};
-  return `<section class="panel dashboard-header partner-hero">
-    <div class="dashboard-header-main">
-      <div class="eyebrow dashboard-eyebrow">Partner Portal</div>
-      <div class="header-main">
-        ${avatarHtml}
-        <div class="header-copy">
-          <h1>${escapeHtml(h.display_name || "Partner")}</h1>
-          <p class="muted">${escapeHtml(h.contact_email || "")}${h.joined_at ? ` · Joined ${escapeHtml(formatDate(h.joined_at))}` : ""}</p>
+  const activityHtml =
+    Number(insights?.insights?.event_visits_30d || 0) > 0
+      ? `<p class="muted venue-card-empty">${escapeHtml(eventVisits)} aggregate check-ins across linked events in the last 30 days.</p>`
+      : `<p class="muted venue-card-empty">No recent activity yet. Check-ins will appear here once Kami users attend.</p>`;
+
+  return `<article class="venue-card venue-card--consolidated event-card--consolidated">
+    <div class="venue-card-section venue-card-section--info">
+      <h4 class="venue-card-section-title">Event Info</h4>
+      <div class="venue-card-header">
+        ${image}
+        <div class="venue-card-content">
+          <h3>${escapeHtml(event.name || "Event")}</h3>
+          <p class="event-meta">
+            ${escapeHtml(formatDateTime(event.starts_at))}${event.ends_at ? ` – ${escapeHtml(formatDateTime(event.ends_at))}` : ""}<br>
+            ${escapeHtml(location || "Venue not listed")}<br>
+            ${statusBadge} ${timingBadge}
+          </p>
+          <div class="venue-card-actions">
+            <button type="button" class="btn secondary btn-sm" data-event-detail="${escapeHtml(event.event_id || "")}">View Details</button>
+          </div>
         </div>
       </div>
     </div>
-    <span class="status-badge">${escapeHtml(h.status_label || "Partner")}</span>
+    <div class="venue-card-section">
+      <h4 class="venue-card-section-title">Performance</h4>
+      <p class="muted venue-card-section-lede">Aggregate activity for this event. Individual user identities are never shown.</p>
+      ${performanceHtml}
+    </div>
+    <div class="venue-card-section">
+      <h4 class="venue-card-section-title">Recent Activity</h4>
+      ${activityHtml}
+    </div>
+    ${hasEventRewards ? renderVenueStoreRewardsSection(event) : ""}
+  </article>`;
+}
+
+export function renderPartnerHero(header, avatarHtml, heroStats = {}) {
+  const h = header || {};
+  const stats = heroStats || {};
+  const venueCount = stats.venuesCount ?? 0;
+  const eventCount = stats.eventsCount ?? 0;
+  const earningsLabel = stats.referralEarningsLabel || formatMoney(stats.referralEarningsCents ?? 0);
+
+  return `<section class="panel dashboard-header dashboard-hero">
+    <div class="dashboard-header-main">
+      <div class="eyebrow dashboard-eyebrow">Partner Portal</div>
+      <div class="header-main dashboard-hero-main">
+        ${avatarHtml.replace('class="avatar"', 'class="avatar dashboard-hero-avatar"').replace('class="avatar avatar-fallback"', 'class="avatar avatar-fallback dashboard-hero-avatar"')}
+        <div class="header-copy dashboard-hero-copy">
+          <h1>${escapeHtml(h.display_name || "Partner")}</h1>
+          <p class="muted dashboard-hero-meta">${escapeHtml(h.contact_email || "")}${h.joined_at ? ` · Joined ${escapeHtml(formatDate(h.joined_at))}` : ""}</p>
+          <div class="hero-summary-pills" aria-label="Partner summary">
+            ${renderHeroPill("Venues", String(venueCount))}
+            ${renderHeroPill("Events", String(eventCount))}
+            ${renderHeroPill("Referral earnings", earningsLabel)}
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="status-badge dashboard-hero-status">${escapeHtml(h.status_label || "Partner")}</span>
   </section>`;
 }
 
@@ -286,25 +357,135 @@ export function isValidPortalTab(tab) {
   return PORTAL_TABS.includes(tab);
 }
 
+function renderGettingStartedCard({ venues, insights, outreach, referral, storeRewards }) {
+  const steps = [
+    { label: "Venue connected", done: (venues || []).length > 0 },
+    { label: "First Kami visitor", done: Boolean(insights?.has_activity) },
+    {
+      label: "First connection request",
+      done: Array.isArray(outreach?.events) && outreach.events.length > 0,
+    },
+    {
+      label: "First referral signup",
+      done: Number(referral?.signup_count || 0) > 0,
+    },
+    {
+      label: "First reward redemption",
+      done: (storeRewards || []).some((row) => Number(row?.redemptions || 0) > 0),
+    },
+  ];
+  const doneCount = steps.filter((step) => step.done).length;
+  if (doneCount >= steps.length) return "";
+  if (doneCount >= 4 && insights?.has_activity) return "";
+
+  const items = steps
+    .map(
+      (step) =>
+        `<li class="getting-started-step${step.done ? " is-done" : ""}">
+          <span class="getting-started-mark" aria-hidden="true">${step.done ? "✓" : "○"}</span>
+          <span>${escapeHtml(step.label)}</span>
+        </li>`
+    )
+    .join("");
+
+  return `<section class="panel panel-primary getting-started-card">
+    <h2>Getting Started</h2>
+    <p class="section-lede">Track your progress as your partner account comes to life on Kami.</p>
+    <ul class="getting-started-list">${items}</ul>
+  </section>`;
+}
+
 function renderNetworkSummary({ venues, events }) {
   const venueList = Array.isArray(venues) ? venues : [];
   const eventList = Array.isArray(events) ? events : [];
   const activeVenues = venueList.filter((v) => v.is_active).length;
-  const publishedVenues = venueList.filter((v) => v.is_published).length;
   const upcomingEvents = eventList.filter((e) => eventTimingState(e).label === "Upcoming").length;
   const liveEvents = eventList.filter((e) => eventTimingState(e).label === "Live").length;
 
-  return `<section class="panel panel-primary">
-    <h2>Partner Network</h2>
+  return `<section class="panel panel-secondary panel-compact">
+    <h3 class="portal-card-title">Partner Network</h3>
     <p class="section-lede">Summary of venues and events connected to your partner account.</p>
-    <div class="summary-stats-grid">
-      ${renderSummaryStat("Linked Venues", String(venueList.length))}
-      ${renderSummaryStat("Linked Events", String(eventList.length))}
+    <div class="summary-stats-grid summary-stats-grid--three">
       ${renderSummaryStat("Active Venues", String(activeVenues))}
-      ${renderSummaryStat("Published on Kami", String(publishedVenues))}
       ${renderSummaryStat("Upcoming Events", String(upcomingEvents))}
       ${renderSummaryStat("Live Events", String(liveEvents))}
     </div>
+  </section>`;
+}
+
+function formatOutreachStatus(status) {
+  const key = String(status || "").toLowerCase();
+  if (key === "accepted") return "Accepted";
+  if (key === "sent") return "Sent";
+  if (key === "failed") return "Failed";
+  if (!key) return "—";
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
+
+function formatConnectionRequestStatus(row) {
+  const connection = String(row.connection_status || "");
+  if (connection === "accepted") return "Accepted";
+  if (connection === "outgoing_pending") return "Sent";
+  if (connection === "incoming_pending") return "Incoming";
+  return formatOutreachStatus(row.status);
+}
+
+function renderConnectionRequestRow(row) {
+  const user = {
+    user_id: row.user_id,
+    display_name: row.display_name,
+    ig_handle: row.ig_handle,
+    avatar_url: row.avatar_url,
+    connection_status: row.connection_status,
+  };
+  const statusTone =
+    user.connection_status === "accepted"
+      ? "good"
+      : user.connection_status === "outgoing_pending"
+        ? "warn"
+        : "muted";
+
+  return `<article class="connection-request-row">
+    <div class="connection-request-user">${renderUserIdentityCell(user)}</div>
+    <div class="connection-request-meta">
+      <p class="connection-request-venue">${escapeHtml(row.venue_name || "Venue")}</p>
+      <p class="muted connection-request-date">${escapeHtml(formatDateTime(row.created_at))}</p>
+    </div>
+    <div class="connection-request-status">
+      <span class="status-pill status-pill--${statusTone}">${escapeHtml(formatConnectionRequestStatus(row))}</span>
+    </div>
+    <div class="connection-request-action">${renderConnectionAction(user, { allowConnect: false })}</div>
+  </article>`;
+}
+
+function renderConnectionRequestsSection(outreachPayload) {
+  const events = Array.isArray(outreachPayload?.events) ? outreachPayload.events : [];
+  const dailyApp = outreachPayload?.daily || {};
+  const dailyPortal = outreachPayload?.daily_dashboard || {};
+  const appLimit = Number(dailyApp.limit ?? 5);
+  const appUsed = Number(dailyApp.used_today ?? 0);
+  const appRemaining = Number.isFinite(Number(dailyApp.remaining_today))
+    ? Number(dailyApp.remaining_today)
+    : Math.max(appLimit - appUsed, 0);
+  const portalLimit = Number(dailyPortal.limit ?? 5);
+  const portalUsed = Number(dailyPortal.used_today ?? 0);
+  const portalRemaining = Number.isFinite(Number(dailyPortal.remaining_today))
+    ? Number(dailyPortal.remaining_today)
+    : Math.max(portalLimit - portalUsed, 0);
+
+  const capHint = `Kami app in-venue outreach: up to ${appLimit}/day (${appUsed} used, ${appRemaining} remaining). Partner portal (Venues tab): up to ${portalLimit}/day (${portalUsed} used, ${portalRemaining} remaining).`;
+
+  const list = events.length
+    ? `<div class="connection-request-list">${events.map(renderConnectionRequestRow).join("")}</div>`
+    : `<div class="empty-state compact-empty">
+        <p>No connection requests yet. Requests sent from the Kami app or the partner portal Venues tab will appear here.</p>
+      </div>`;
+
+  return `<section class="panel panel-secondary panel-compact" data-connection-requests>
+    <h3 class="portal-card-title">Recent Connection Requests</h3>
+    <p class="section-lede">Connection requests sent from your partner account at linked venues. Message connected users in the same thread as the Kami app.</p>
+    <p class="muted outreach-cap-note">${escapeHtml(capHint)}</p>
+    ${list}
   </section>`;
 }
 
@@ -314,27 +495,27 @@ function renderInsightsSummaryCard(insightsPayload) {
   const hasActivity = insightsPayload?.has_activity;
 
   if (!hasVenues) {
-    return `<section class="panel panel-primary">
-      <h2>Venue / Event Insights</h2>
-      <div class="empty-state">
+    return `<section class="panel panel-secondary panel-compact">
+      <h3 class="portal-card-title">Venue / Event Insights</h3>
+      <div class="empty-state compact-empty">
         <p>Link a venue to your partner account to see aggregate visitor trends and engagement.</p>
       </div>
     </section>`;
   }
 
   const emptyCopy =
-    '<div class="empty-state insights-empty"><p>No activity yet. Insights will appear once Kami activity is detected at your venues or events.</p></div>';
+    '<div class="empty-state insights-empty compact-empty"><p>No activity yet. Insights will appear once Kami activity is detected at your venues or events.</p></div>';
 
-  const metricsGrid = `<div class="metrics-grid metrics-grid--insights insights-metrics-grid">
-    ${renderInsightCard("Visitors This Month", formatMetric(ins.visitors_this_month, { emptyLabel: "0" }))}
-    ${renderInsightCard("Unique Kami Visitors (30d)", formatMetric(ins.unique_visitors_30d, { emptyLabel: "0" }))}
-    ${renderInsightCard("Repeat Visitors (30d)", formatMetric(ins.repeat_visitors_30d, { emptyLabel: "0" }))}
-    ${renderInsightCard("Event Visits (30d)", formatMetric(ins.event_visits_30d, { emptyLabel: "0" }), { hint: "Users who checked in at linked events" })}
-    ${renderInsightCard("Points Earned at Venues (30d)", formatMetric(ins.points_earned_at_venues_30d, { emptyLabel: "0" }), { hint: "Aggregate points earned by users at your venues" })}
+  const metricsGrid = `<div class="metric-strip metric-strip--insights">
+    ${renderMetricChip("Visitors this month", formatMetric(ins.visitors_this_month, { emptyLabel: "0" }))}
+    ${renderMetricChip("Unique visitors (30d)", formatMetric(ins.unique_visitors_30d, { emptyLabel: "0" }))}
+    ${renderMetricChip("Repeat visitors (30d)", formatMetric(ins.repeat_visitors_30d, { emptyLabel: "0" }))}
+    ${renderMetricChip("Event visits (30d)", formatMetric(ins.event_visits_30d, { emptyLabel: "0" }))}
+    ${renderMetricChip("Points at venues (30d)", formatMetric(ins.points_earned_at_venues_30d, { emptyLabel: "0" }))}
   </div>`;
 
-  return `<section class="panel panel-primary">
-    <h2>Venue / Event Insights</h2>
+  return `<section class="panel panel-secondary panel-compact">
+    <h3 class="portal-card-title">Venue / Event Insights</h3>
     <p class="section-lede">Aggregate activity across your linked venues and events. Individual user identities are never shown.</p>
     ${hasActivity ? "" : emptyCopy}
     ${metricsGrid}
@@ -367,9 +548,9 @@ function renderPartnerStoreRewardsSection(storeRewards) {
         <p>No store rewards are currently connected to your partner account.</p>
       </div>`;
 
-  return `<section class="panel panel-secondary">
-    <h2>Partner Store Rewards</h2>
-    <p class="section-lede">Kami Store rewards and perks connected to your partner account via <a href="/store">kamisocial.com/store</a>.</p>
+  return `<section class="panel panel-secondary panel-compact">
+    <h3 class="portal-card-title">Partner Store Rewards</h3>
+    <p class="section-lede">Kami Store rewards connected to your partner account via <a href="/store">kamisocial.com/store</a>.</p>
     ${body}
   </section>`;
 }
@@ -440,6 +621,7 @@ export function renderPartnerOverviewTab({
   venues,
   events,
   insights,
+  outreach,
   storeRewards,
   referral,
   metrics,
@@ -447,26 +629,34 @@ export function renderPartnerOverviewTab({
   referralsTable,
   payoutTable,
   ledgerTable,
+  ledgerEntries,
   history,
 }) {
-  return `
-    ${renderNetworkSummary({ venues, events })}
-    ${renderInsightsSummaryCard(insights)}
-    ${renderPartnerStoreRewardsSection(storeRewards)}
+  const performance = `${renderNetworkSummary({ venues, events })}
+    ${renderInsightsSummaryCard(insights)}`;
+
+  const community = renderConnectionRequestsSection(outreach);
+
+  const earnings = `${renderPartnerStoreRewardsSection(storeRewards)}
     ${renderReferralProgram({
       referral,
       metrics,
       programParameters,
       referralsTable,
       payoutTable,
-    })}
-    ${renderChangeLedger(ledgerTable)}
+    })}`;
+
+  const account = `${renderChangeLedger(ledgerTable, ledgerEntries)}
     ${renderAgreementHistorySection(history)}
     ${renderSupportSection()}
-    ${renderLeaveSection()}
-    <section class="panel centered-panel">
-      <button type="button" class="btn secondary" id="logout-btn">Log out</button>
-    </section>`;
+    ${renderLeaveSection()}`;
+
+  return `
+    ${renderGettingStartedCard({ venues, insights, outreach, referral, storeRewards })}
+    ${renderPortalSectionGroup("Performance", performance)}
+    ${renderPortalSectionGroup("Community", community)}
+    ${renderPortalSectionGroup("Earnings", earnings)}
+    ${renderPortalSectionGroup("Account", account)}`;
 }
 
 export function renderPartnerVenuesTab({ venues, insights }) {
@@ -498,25 +688,26 @@ export function renderPartnerVenuesTab({ venues, insights }) {
 export function renderPartnerEventsTab({ events, insights }) {
   const eventList = Array.isArray(events) ? events : [];
 
-  const linkedEvents =
-    eventList.length === 0
-      ? `<section class="panel panel-primary">
-          <h2>Linked Events</h2>
-          <div class="empty-state">
-            <h3>No events linked yet</h3>
-            <p>Events linked by Kami will appear here. Contact <a href="mailto:partners@kamisocial.com">partners@kamisocial.com</a> to list an event.</p>
-          </div>
-        </section>`
-      : `<section class="panel panel-primary">
-          <h2>Linked Events</h2>
-          <p class="section-lede">${eventList.length === 1 ? "1 event linked to your partner account." : `${eventList.length} events linked to your partner account.`}</p>
-          <div class="event-list">${eventList.map(renderEventCard).join("")}</div>
-        </section>`;
+  if (!eventList.length) {
+    return `<section class="panel panel-primary">
+      <h2>Your Events</h2>
+      <div class="empty-state">
+        <h3>No events linked yet</h3>
+        <p>No events linked yet. Events linked by Kami will appear here.</p>
+      </div>
+    </section>`;
+  }
 
-  return `
-    ${linkedEvents}
-    ${renderEventAnalyticsSection(eventList, insights)}
-    ${renderEventActivitySection(eventList, insights)}`;
+  const lede =
+    eventList.length === 1
+      ? "1 event linked to your partner account."
+      : `${eventList.length} events linked to your partner account.`;
+
+  return `<section class="panel panel-primary">
+    <h2>Your Events</h2>
+    <p class="section-lede">${lede}</p>
+    <div class="venue-card-stack">${eventList.map((event) => renderConsolidatedEventCard(event, insights)).join("")}</div>
+  </section>`;
 }
 
 export function renderReferralProgram({
@@ -532,28 +723,19 @@ export function renderReferralProgram({
     ? `<a class="copy-value copy-value-link" id="ref-link" href="${escapeHtml(referralLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(referralLink)}</a>`
     : `<p class="copy-value copy-value-link" id="ref-link">—</p>`;
 
-  const metricsHtml = [
-    ["Current Month Qualified Referrals", String(m.current_month_qualified_referrals ?? 0)],
-    ["Pending Earnings", formatMoney(m.pending_earnings_cents)],
-    ["Approved Earnings", formatMoney(m.approved_earnings_cents)],
-    ["Lifetime Earnings", formatMoney(m.lifetime_earnings_cents)],
-    ["Current Tier Cap", m.monthly_earnings_limit_cents != null ? formatMoney(m.monthly_earnings_limit_cents) : "—"],
-    ["Remaining Before Tier Cap", m.remaining_eligible_earnings_cents != null ? formatMoney(m.remaining_eligible_earnings_cents) : "—"],
-    ["Paid This Month", formatMoney(m.paid_this_month_cents)],
-    ["Total Paid Lifetime", formatMoney(m.total_paid_lifetime_cents)],
-  ]
-    .map(
-      ([label, value]) =>
-        `<article class="metric-card metric-card--compact"><p class="metric-label">${escapeHtml(label)}</p><p class="metric-value">${escapeHtml(value)}</p></article>`
-    )
-    .join("");
+  const metricsHtml = renderMetricStrip([
+    ["Qualified referrals", String(m.current_month_qualified_referrals ?? 0)],
+    ["Pending earnings", formatMoney(m.pending_earnings_cents)],
+    ["Approved earnings", formatMoney(m.approved_earnings_cents)],
+    ["Lifetime earnings", formatMoney(m.lifetime_earnings_cents)],
+    ["Total paid lifetime", formatMoney(m.total_paid_lifetime_cents)],
+  ]);
 
-  return `<section class="panel panel-secondary" id="partner-referral">
-    <h2>Partner Referral Program</h2>
-    <p class="section-lede">Track referrals and earnings from your partner referral link.</p>
+  return `<section class="panel panel-secondary panel-compact referral-compact" id="partner-referral">
+    <h3 class="portal-card-title">Partner Referral Program</h3>
+    <p class="section-lede">Share your partner referral link with customers, guests, and community members who would genuinely enjoy Kami.</p>
 
-    <div class="referral-subsection">
-      <h3>Referral Link</h3>
+    <div class="referral-subsection referral-subsection--primary">
       <div class="copy-grid">
         <div>
           <label>Referral Code</label>
@@ -571,36 +753,48 @@ export function renderReferralProgram({
           </div>
         </div>
       </div>
-      <p class="helper-row">Share your partner referral link with customers, guests, followers, and community members who would genuinely enjoy Kami.</p>
     </div>
 
     <div class="referral-subsection">
-      <h3>Referral Metrics</h3>
-      <div class="metrics-grid metrics-grid--compact">${metricsHtml}</div>
+      <h4 class="subsection-title">Earnings snapshot</h4>
+      ${metricsHtml}
     </div>
 
-    <details class="terms-collapsible">
-      <summary class="terms-collapsible-summary">Current Program Terms</summary>
+    <details class="portal-details">
+      <summary class="portal-details-summary">View Program Terms</summary>
       ${renderProgramTermsCard(programParameters, { reminder: true })}
     </details>
 
-    <div class="referral-subsection table-panel">
-      <h3>Referrals</h3>
+    <details class="portal-details">
+      <summary class="portal-details-summary">View Referrals</summary>
       <div class="table-wrap"><table><thead><tr><th>Date</th><th>Name</th><th>Handle</th><th>Status</th><th>Rate/Tier</th><th>Earnings</th><th>Notes</th></tr></thead><tbody>${referralsTable}</tbody></table></div>
-    </div>
+    </details>
 
-    <div class="referral-subsection table-panel">
-      <h3>Payout History</h3>
+    <details class="portal-details">
+      <summary class="portal-details-summary">View Payout History</summary>
       <div class="table-wrap"><table><thead><tr><th>Period</th><th>Qualified</th><th>Gross</th><th>Adjustments</th><th>Approved</th><th>Paid</th><th>Paid Date</th><th>Status</th><th>Notes</th></tr></thead><tbody>${payoutTable}</tbody></table></div>
-    </div>
+    </details>
   </section>`;
 }
 
-export function renderChangeLedger(ledgerTable) {
+export function renderChangeLedger(ledgerTable, ledgerEntries = []) {
+  const entries = Array.isArray(ledgerEntries) ? ledgerEntries : [];
+  const latest = entries[0];
+  const summaryHtml = latest
+    ? `<div class="ledger-summary">
+        <p class="ledger-summary-type"><strong>${escapeHtml(latest.change_type || "Update")}</strong> · ${formatDateTime(latest.date)}</p>
+        <p class="muted ledger-summary-note">${escapeHtml(latest.notes || formatLedgerValue(latest.new_value) || "Program record updated.")}</p>
+      </div>`
+    : `<p class="muted ledger-summary-empty">No program updates recorded yet.</p>`;
+
   return `<section class="panel panel-compact panel-secondary">
-    <h2>Program Updates</h2>
-    <p class="section-lede muted">A record of agreement acceptances and program setting changes for your partner account.</p>
-    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Change Type</th><th>Previous</th><th>New</th><th>Notes</th></tr></thead><tbody>${ledgerTable}</tbody></table></div>
+    <h3 class="portal-card-title">Program Updates</h3>
+    <p class="section-lede muted">Agreement acceptances and program setting changes for your partner account.</p>
+    ${summaryHtml}
+    <details class="portal-details">
+      <summary class="portal-details-summary">View History</summary>
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Change Type</th><th>Previous</th><th>New</th><th>Notes</th></tr></thead><tbody>${ledgerTable}</tbody></table></div>
+    </details>
   </section>`;
 }
 
@@ -633,7 +827,7 @@ export function renderAgreementHistorySection(history) {
     : `<p class="muted">No previous accepted agreements.</p>`;
 
   return `<section class="panel panel-compact panel-secondary">
-    <h2>Agreement History</h2>
+    <h3 class="portal-card-title">Agreement History</h3>
     <h3 class="subsection-title">Current Agreement</h3>
     ${currentAgreementHtml}
     <details class="history-collapsible">
@@ -645,7 +839,7 @@ export function renderAgreementHistorySection(history) {
 
 export function renderSupportSection() {
   return `<section class="panel panel-compact">
-    <h2>Support</h2>
+    <h3 class="portal-card-title">Support</h3>
     <p>Questions about your venues, events, insights, or program terms? Contact <a href="mailto:partners@kamisocial.com">partners@kamisocial.com</a>.</p>
     <div class="support-links">
       <a href="/terms">Terms of Service</a>
@@ -656,7 +850,7 @@ export function renderSupportSection() {
 
 export function renderLeaveSection() {
   return `<section class="panel danger-panel panel-compact">
-    <h2>Leave Partner Program</h2>
+    <h3 class="portal-card-title">Leave Partner Program</h3>
     <p class="muted">You will stop participating as a partner for future referrals and portal access. Previously approved earnings remain eligible for payout under the Program Agreement.</p>
     <button type="button" class="btn secondary btn-danger-outline" id="leave-open">Leave Partner Program</button>
   </section>`;

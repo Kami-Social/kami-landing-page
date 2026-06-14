@@ -346,8 +346,7 @@ export function renderPublicLandingHTML({ misconfigured = false } = {}) {
 
 export function wirePublicLanding({ wireLoginForm }) {
   document.body.classList.add("partner-is-public");
-  const footer = document.getElementById("partner-public-footer");
-  if (footer) footer.hidden = false;
+  syncSiteFooter(true);
 
   const form = document.getElementById("partner-inquiry-form");
   const msg = document.getElementById("inquiry-message");
@@ -429,10 +428,14 @@ export function wirePublicLanding({ wireLoginForm }) {
   schedulePartnerLandingHash();
 }
 
+export function syncSiteFooter(visible = true) {
+  const footer = document.getElementById("partner-public-footer");
+  if (footer) footer.hidden = !visible;
+}
+
 export function clearPublicLandingMode() {
   document.body.classList.remove("partner-is-public");
-  const footer = document.getElementById("partner-public-footer");
-  if (footer) footer.hidden = true;
+  syncSiteFooter(true);
 }
 
 /** Scroll to in-page partner anchors after async landing HTML is mounted. */

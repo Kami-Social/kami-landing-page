@@ -1,15 +1,33 @@
 const { sendJson } = require("../lib/request");
-const { buildSignedKamiImageUrl } = require("../lib/place-photo-signing");
 const { logPartnerMedia } = require("../lib/partner-media-debug");
 const {
   bearerToken,
   createUserClient,
+  createAdminClient,
   pickAnonKey,
   pickSupabaseUrl,
   pickServiceKey,
 } = require("../lib/supabase-auth");
+const {
+  SIGNED_URL_TTL_SEC,
+  resolvePartnerPlaceImageUrl,
+} = require("../lib/partner-place-image-resolve");
 
-const SIGNED_URL_TTL_SEC = 60 * 60;
+async function loadApprovedPlaceImage(admin, placeId) {
+  if (!admin || !placeId) return null;
+  const { data, error } = await admin
+    .from("place_images")
+    .select("storage_bucket, storage_path, status")
+    .eq("place_id", placeId)
+    .eq("status", "approved")
+    .order("approved_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data?.storage_path) return null;
+  return data;
+}
 
 module.exports = async function partnerPlacePhoto(req, res) {
   if (req.method !== "GET") {
@@ -58,51 +76,35 @@ module.exports = async function partnerPlacePhoto(req, res) {
     return;
   }
 
-  const signingSecret = String(process.env.PLACE_PHOTO_SIGNING_SECRET || "").trim();
-  const maxh = req.query?.maxh;
-  const maxw = req.query?.maxw;
-  let url = null;
-
-  if (signingSecret) {
-    url = buildSignedKamiImageUrl(pickSupabaseUrl(), signingSecret, placeId, {
-      maxHeight: maxh,
-      maxWidth: maxw,
-    });
+  let admin = null;
+  try {
+    admin = createAdminClient();
+  } catch (e) {
+    logPartnerMedia("place-photo.adminClient", { error: e?.message || "createAdminClient_failed" });
   }
 
-  const storagePath = String(venue.photo_storage_path || "").trim();
-  const storageBucket = String(venue.photo_storage_bucket || "place-images").trim();
-
-  if (!url && storagePath) {
-    const { data, error } = await userClient.storage
-      .from(storageBucket)
-      .createSignedUrl(storagePath, SIGNED_URL_TTL_SEC);
-    logPartnerMedia("place-photo.userClientSign", {
-      placeId,
-      bucket: storageBucket,
-      path: storagePath,
-      ok: Boolean(data?.signedUrl),
-      error: error?.message || null,
-    });
-    if (!error && data?.signedUrl) {
-      url = data.signedUrl;
-    }
-  }
+  const imageRow = admin ? await loadApprovedPlaceImage(admin, placeId) : null;
+  const { url, source } = await resolvePartnerPlaceImageUrl({
+    supabaseUrl: pickSupabaseUrl(),
+    signingSecret: String(process.env.PLACE_PHOTO_SIGNING_SECRET || "").trim(),
+    placeId,
+    venue,
+    imageRow,
+    admin,
+    userClient,
+  });
 
   if (!url) {
     logPartnerMedia("place-photo.response", {
       status: 404,
       error: "photo_unavailable",
       placeId,
-      bucket: storageBucket,
-      path: storagePath,
       serviceRoleKeyLength: pickServiceKey().length,
     });
     sendJson(res, 404, { ok: false, error: "photo_unavailable" });
     return;
   }
 
-  logPartnerMedia("place-photo.response", { status: 200, placeId, hasUrl: true });
-
+  logPartnerMedia("place-photo.response", { status: 200, placeId, source, hasUrl: true });
   sendJson(res, 200, { ok: true, url, expires_in: SIGNED_URL_TTL_SEC });
 };

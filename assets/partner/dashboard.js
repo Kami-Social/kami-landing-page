@@ -8,7 +8,7 @@ import {
 } from "./format.js";
 import { renderImageOrFallback } from "./media.js";
 import { wireEditReferralCode } from "../shared/referral-code-edit.js";
-import { enrichPartnerMedia } from "./enrich-media.js?v=20260615d";
+import { enrichPartnerMedia } from "./enrich-media.js?v=20260617e";
 import { pickUsablePhotoUrl } from "./media.js";
 import { partnerMediaDebug } from "./media-debug.js";
 import {
@@ -25,8 +25,9 @@ import {
   isValidPortalTab,
   wireAgreementHistory,
   wireNetworkDetails,
-} from "./dashboard-sections.js?v=20260615j";
-import { wireAllVenueVisitHistories } from "./venue-visitors.js?v=20260615j";
+} from "./dashboard-sections.js?v=20260617c";
+import { wireAllVenueVisitHistories, wireUserConnectionActions } from "./venue-visitors.js?v=20260617k";
+import { wireAllVenueWalls } from "./venue-wall.js?v=20260617k";
 
 function readTabFromUrl() {
   const tab = new URLSearchParams(window.location.search).get("tab");
@@ -188,7 +189,9 @@ function applyPartnerMedia(root, { dashboard, eventsPayload }) {
 
   for (const venue of dashboard?.venues || []) {
     if (!venue?.place_id) continue;
-    const card = root.querySelector(`[data-venue-detail="${venue.place_id}"]`)?.closest(".venue-card");
+    const card =
+      root.querySelector(`[data-place-id="${venue.place_id}"]`) ||
+      root.querySelector(`[data-venue-detail="${venue.place_id}"]`)?.closest(".venue-card");
     if (!card) continue;
     setCardPhoto(card, venue.photo_url, {
       fallbackText: venue.name || "V",
@@ -199,7 +202,7 @@ function applyPartnerMedia(root, { dashboard, eventsPayload }) {
   for (const event of eventsPayload?.events || []) {
     const url = event.display_image_url || event.image_url;
     if (!event?.event_id) continue;
-    const card = root.querySelector(`[data-event-detail="${event.event_id}"]`)?.closest(".event-card");
+    const card = root.querySelector(`[data-event-detail="${event.event_id}"]`)?.closest(".venue-card, .event-card");
     if (!card) continue;
     setCardPhoto(card, url, {
       fallbackText: event.name || "E",
@@ -330,6 +333,8 @@ export async function renderPartnerDashboard(ctx) {
   const ledgerTable =
     ledgerRows || `<tr><td colspan="5" class="empty-cell">No program updates recorded yet.</td></tr>`;
 
+  const ledgerEntries = Array.isArray(ledger?.ledger) ? ledger.ledger : [];
+
   let currentTab = activeTab;
   let liveDashboard = dashboard;
   let liveEventsPayload = eventsPayload;
@@ -348,6 +353,7 @@ export async function renderPartnerDashboard(ctx) {
         referralsTable,
         payoutTable,
         ledgerTable,
+        ledgerEntries,
         history,
       }),
     venues: () =>
@@ -389,6 +395,18 @@ export async function renderPartnerDashboard(ctx) {
     });
     wireAgreementHistory(history, { showModal });
     wireLeaveModal(pid, { showModal, hideModal, supabase, onLeft });
+
+    const overviewPanel = document.getElementById("portal-tab-content");
+    const connectionRequests = overviewPanel?.querySelector("[data-connection-requests]");
+    if (connectionRequests) {
+      wireUserConnectionActions(connectionRequests, {
+        rpc,
+        supabase,
+        partnerId: pid,
+        showModal,
+        onActionComplete: () => showTab("overview"),
+      });
+    }
   }
 
   function wireTabPanelActions(tab) {
@@ -407,10 +425,32 @@ export async function renderPartnerDashboard(ctx) {
     if (tab === "venues") {
       wireAllVenueVisitHistories({
         rpc,
+        supabase,
         partnerId: pid,
         root: document.getElementById("portal-tab-content"),
         showModal,
       });
+      void rpc("kami_resolve_auth_app_user_id")
+        .then((appUserId) => {
+          wireAllVenueWalls({
+            rpc,
+            supabase,
+            partnerId: pid,
+            appUserId,
+            root: document.getElementById("portal-tab-content"),
+            showModal,
+          });
+        })
+        .catch(() => {
+          wireAllVenueWalls({
+            rpc,
+            supabase,
+            partnerId: pid,
+            appUserId: null,
+            root: document.getElementById("portal-tab-content"),
+            showModal,
+          });
+        });
     }
   }
 
@@ -429,9 +469,18 @@ export async function renderPartnerDashboard(ctx) {
     window.scrollTo({ top: 0, behavior: "auto" });
   }
 
+  document.body.classList.add("partner-dashboard");
+  document.body.classList.remove("partner-is-public");
+
+  const heroStats = {
+    venuesCount: (dashboard.venues || []).length,
+    eventsCount: (eventsPayload?.events || []).length,
+    referralEarningsCents: dashboard.metrics?.lifetime_earnings_cents ?? 0,
+  };
+
   setRoot(`
     ${switcherHtml}
-    ${renderPartnerHero(h, avatar)}
+    ${renderPartnerHero(h, avatar, heroStats)}
     ${renderPortalTabs(currentTab)}
     <div id="portal-tab-content" class="portal-tab-content" role="tabpanel"></div>
   `);

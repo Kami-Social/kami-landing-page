@@ -3,30 +3,80 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kami Ambassador Program</title>
-  <meta name="description" content="Approved Kami ambassadors can log in to view referral activity, program terms, payout status, and ambassador settings." />
-  <meta name="robots" content="noindex, nofollow" />
+  <title>Kami Ambassador Program | Grow Real-World Community</title>
+  <meta name="description" content="Join the Kami Ambassador Program. Help grow local communities, earn referral rewards, and get early access to new features. Apply or log in to the Ambassador Portal." />
   <link rel="icon" href="../assets/k-mark-transparent.png" type="image/png" sizes="any" />
-  <link rel="stylesheet" href="../assets/ambassador/styles.css?v=20260614" />
+  <link rel="stylesheet" href="../assets/ambassador/styles.css?v=20260617o" />
+  <link rel="stylesheet" href="../assets/download-nav-button.css" />
+  <link rel="stylesheet" href="../assets/ambassador/landing.css?v=20260616a" />
   <script src="../assets/supabase-browser-public.js"></script>
+  <script>
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  </script>
 </head>
-<body>
+<body class="ambassador-is-public">
   <nav>
-    <div class="nav-inner">
+    <div class="nav-inner ambassador-nav-inner">
       <a href="/" aria-label="Kami home">
         <img class="wordmark-img" src="../assets/logo-wordmark.png" alt="Kami" />
       </a>
-      <a class="nav-link" href="/">Back to Kami</a>
+      <div class="ambassador-nav-right">
+        <div class="ambassador-nav-links">
+          <a class="nav-link ambassador-nav-home" href="/" hidden>Kami Home</a>
+          <a class="nav-link ambassador-nav-marketing" href="#ambassador-why">Why Join</a>
+          <a class="nav-link ambassador-nav-marketing" href="#ambassador-how">How It Works</a>
+          <a class="nav-link ambassador-nav-marketing" href="#ambassador-apply">Apply</a>
+          <a class="nav-link ambassador-nav-marketing" href="#ambassador-login">Ambassador Login</a>
+        </div>
+        <button type="button" class="btn secondary btn-sm ambassador-nav-logout" id="ambassador-nav-logout" hidden aria-hidden="true">Log out</button>
+        <a href="/#download" class="btn nav-download">Download Kami</a>
+      </div>
     </div>
   </nav>
+  <script>
+    (function () {
+      var logout = document.getElementById("ambassador-nav-logout");
+      if (logout) logout.hidden = true;
+    })();
+  </script>
 
-  <main class="container">
-    <div id="ambassador-root" class="amb-boot-loading" aria-live="polite" aria-busy="true">
-      <section class="panel boot-panel">
-        <p class="boot-text" role="status">Loading ambassador portal…</p>
-      </section>
-    </div>
+  <main class="container" id="ambassador-main">
+    <div id="ambassador-root" aria-live="polite"></div>
   </main>
+
+  <footer id="ambassador-public-footer" class="site-footer">
+    <div class="nav-container footer-columns">
+      <div class="footer-brand">
+        <a href="/" aria-label="Kami home">
+          <img class="wordmark-img footer-wordmark" src="../assets/logo-wordmark.png" alt="Kami" />
+        </a>
+        <p>Real people. Real moments.</p>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <a href="/">Home</a>
+        <a href="/how-it-works">How It Works</a>
+        <a href="/#faq">FAQ</a>
+        <a href="/store">Store</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+        <a href="/ambassador">Ambassadors</a>
+        <a href="/partner">Partners</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="mailto:hello@kamisocial.com"><strong>hello@kamisocial.com</strong></a>
+      </div>
+      <div class="footer-col footer-col-download">
+        <h4>Download</h4>
+        <a class="btn nav-download" href="/#download">Download Kami</a>
+      </div>
+    </div>
+    <div class="copyright">© 2026 Kami Social. All rights reserved.</div>
+  </footer>
 
   <div id="amb-modal" class="amb-modal" hidden>
     <div class="amb-modal-backdrop" aria-hidden="true"></div>
@@ -37,10 +87,40 @@
     </div>
   </div>
 
-  <footer>
-    <p>© Kami Social · <a href="mailto:ambassadors@kamisocial.com">ambassadors@kamisocial.com</a></p>
-  </footer>
+  <script type="module">
+    import {
+      renderPublicLandingHTML,
+      scheduleAmbassadorLandingHash,
+      wireAmbassadorLandingHashScroll,
+    } from "../assets/ambassador/public-landing.js?v=20260615j";
 
-  <script type="module" src="../assets/ambassador/app.js?v=20260614a"></script>
+    const likelyLoggedIn =
+      typeof window.kamiHasLikelyStoredSession === "function" &&
+      window.kamiHasLikelyStoredSession("ambassador");
+
+    if (!likelyLoggedIn) {
+      const root = document.getElementById("ambassador-root");
+      if (root && !root.querySelector(".ambassador-land")) {
+        root.innerHTML = renderPublicLandingHTML();
+        wireAmbassadorLandingHashScroll();
+        scheduleAmbassadorLandingHash();
+      }
+    }
+  </script>
+  <script>
+    (function () {
+      var root = document.getElementById("ambassador-root");
+      if (!root || typeof window.kamiHasLikelyStoredSession !== "function") return;
+      if (!window.kamiHasLikelyStoredSession("ambassador")) return;
+      root.className = "amb-boot-loading";
+      root.setAttribute("aria-busy", "true");
+      root.innerHTML =
+        '<section class="panel boot-panel ambassador-boot-panel">' +
+        '<img class="boot-logo" src="../assets/k-mark-transparent.png" alt="" width="56" height="62" aria-hidden="true" />' +
+        '<p class="boot-text" role="status">Loading ambassador portal…</p>' +
+        '</section>';
+    })();
+  </script>
+  <script type="module" src="../assets/ambassador/app.js?v=20260617o"></script>
 </body>
 </html>
