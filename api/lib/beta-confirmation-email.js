@@ -6,6 +6,8 @@ const BETA_CONFIRMATION_FROM = "Benji from Kami <benji@mail.kamisocial.com>";
 const BETA_CONFIRMATION_REPLY_TO = "hello@kamisocial.com";
 const DEFAULT_ANDROID_PLAY_LINK =
   "https://play.google.com/store/apps/details?id=com.kamisocial.app";
+const DEFAULT_IOS_TESTFLIGHT_LINK =
+  "https://testflight.apple.com/join/wPwJCSyX";
 const LOGO_URL = "https://admin.kamisocial.com/kami-logo.png";
 
 function escapeHtml(value) {
@@ -28,7 +30,8 @@ function resolveAndroidPlayLink() {
 
 function resolveIosTestflightLink() {
   const configured = String(process.env.IOS_TESTFLIGHT_LINK || "").trim();
-  return isConfiguredLink(configured) ? configured : null;
+  if (isConfiguredLink(configured)) return configured;
+  return DEFAULT_IOS_TESTFLIGHT_LINK;
 }
 
 function renderBetaConfirmationEmailText({ platform, ctaUrl, ctaLabel, title, body }) {
