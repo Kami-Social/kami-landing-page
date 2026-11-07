@@ -736,8 +736,8 @@ export function renderReferralProgram({
   ]);
 
   return `<section class="panel panel-secondary panel-compact referral-compact" id="partner-referral">
-    <h3 class="portal-card-title">Partner Referral Program</h3>
-    <p class="section-lede">Share your partner referral link with customers, guests, and community members who would genuinely enjoy Kami.</p>
+    <h3 class="portal-card-title">Referral code</h3>
+    <p class="section-lede">This is the same referral code as the one on your Kami account. Share it with customers, guests, and community members who would genuinely enjoy Kami. While your partner account is active, an eligible referral who completes registration with this code receives partner compensation under the Partner Program.</p>
 
     <div class="referral-subsection referral-subsection--primary">
       <div class="copy-grid">

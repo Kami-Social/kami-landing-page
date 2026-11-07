@@ -7,7 +7,7 @@ import {
   formatMoney,
 } from "./format.js";
 import { renderImageOrFallback } from "./media.js";
-import { wireEditReferralCode } from "../shared/referral-code-edit.js";
+import { wireEditReferralCode } from "../shared/referral-code-edit.js?v=20261107b";
 import { enrichPartnerMedia } from "./enrich-media.js?v=20260617e";
 import { pickUsablePhotoUrl } from "./media.js";
 import { partnerMediaDebug } from "./media-debug.js";
@@ -25,7 +25,7 @@ import {
   isValidPortalTab,
   wireAgreementHistory,
   wireNetworkDetails,
-} from "./dashboard-sections.js?v=20261107a";
+} from "./dashboard-sections.js?v=20261107b";
 import { wireAllVenueVisitHistories, wireUserConnectionActions } from "./venue-visitors.js?v=20260617k";
 import { wireAllVenueWalls } from "./venue-wall.js?v=20260617k";
 
@@ -298,7 +298,7 @@ export async function renderPartnerDashboard(ctx) {
 
   const referralsTable =
     referralRows ||
-    `<tr><td colspan="7" class="empty-cell">No referrals yet. Share your partner referral link when you're ready to grow the Kami community.</td></tr>`;
+    `<tr><td colspan="7" class="empty-cell">No referrals yet. Share your referral code when you're ready to grow the Kami community.</td></tr>`;
 
   const payoutRows = (payouts?.payouts || [])
     .map(

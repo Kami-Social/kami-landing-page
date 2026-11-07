@@ -11,7 +11,7 @@ import {
 } from "./public-landing.js";
 import { getAgreement, getCurrentAgreementText } from "./agreements/index.js?v=20261107a";
 import { renderImageOrFallback } from "./media.js";
-import { renderPartnerDashboard, readTabFromUrl } from "./dashboard.js?v=20261107a";
+import { renderPartnerDashboard, readTabFromUrl } from "./dashboard.js?v=20261107b";
 import {
   getPortalAuthStorageKey,
   hasLikelyPortalStoredSession,

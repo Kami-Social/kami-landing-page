@@ -53,7 +53,11 @@ export function wireEditReferralCode({
   document.getElementById("edit-code")?.addEventListener("click", () => {
     showModal(
       "Edit Referral Code",
-      `<p class="muted">Choose a custom code for your invite link. Codes use lowercase letters, numbers, hyphens, or underscores (3–49 characters).</p>
+      `<p class="muted">${
+        partnerId
+          ? "This is the one referral code on your Kami account and in the partner dashboard. Saving a new code keeps the previous code working for people who already have it. While your partner account is active, eligible referrals who complete registration with the current code receive partner compensation. Use 3–49 characters: lowercase letters, numbers, hyphens, or underscores."
+          : "Choose a custom code for your invite link. Codes use lowercase letters, numbers, hyphens, or underscores (3–49 characters)."
+      }</p>
        <label for="edit-code-input">New referral code</label>
        <input id="edit-code-input" type="text" autocomplete="off" spellcheck="false" value="${escapeHtml(currentCode)}" />
        <div id="edit-code-error" class="msg err" hidden role="alert"></div>
