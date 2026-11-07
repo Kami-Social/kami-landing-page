@@ -25,7 +25,7 @@ import {
   isValidPortalTab,
   wireAgreementHistory,
   wireNetworkDetails,
-} from "./dashboard-sections.js?v=20261106e";
+} from "./dashboard-sections.js?v=20261107a";
 import { wireAllVenueVisitHistories, wireUserConnectionActions } from "./venue-visitors.js?v=20260617k";
 import { wireAllVenueWalls } from "./venue-wall.js?v=20260617k";
 

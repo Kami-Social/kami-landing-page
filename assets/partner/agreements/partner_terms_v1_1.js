@@ -29,7 +29,7 @@ Compensation rates and payout thresholds are shown in your Partner Portal. Eligi
 
 Kami may change compensation rates, payout thresholds, qualification requirements, and other Program parameters at any time. The current parameters are displayed in your Partner Portal, which serves as your partner dashboard and is the authoritative source for those parameters. Parameters displayed when you accepted this Agreement are not guaranteed for any fixed period.
 
-Kami will post changes in your Partner Portal and send notice to the email address associated with your account. Each notice will identify the changes and their effective date. Changes take effect on the stated effective date, but no earlier than when the updated parameters have been posted and the email notification has been sent.
+Kami will post changes in your Partner Portal and send notice to the email address associated with your account. Each notice will identify the changes. Changes take effect once both the updated parameters have been posted in your Partner Portal and the email notification has been sent.
 
 Each referral is governed by the compensation rate and qualification requirements effective in your Partner Portal when that referral completes registration through Kami's designated attribution method. Referrals completing registration on or after a change takes effect are governed by the updated parameters. Changes do not retroactively reduce compensation accrued under previously applicable parameters. Accrued compensation remains subject to the applicable qualification requirements and the validation and review provisions of this Agreement. The date compensation is paid does not change the rate applicable to that referral.
 

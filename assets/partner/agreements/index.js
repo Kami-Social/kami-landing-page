@@ -1,7 +1,7 @@
-export { VERSION, TITLE, TEXT } from "./partner_terms_v1_1.js?v=20261106e";
+export { VERSION, TITLE, TEXT } from "./partner_terms_v1_1.js?v=20261107a";
 
 import { VERSION as V1, TITLE as T1, TEXT as TEXT1 } from "./partner_terms_v1.js";
-import { VERSION as V1_1, TITLE as T1_1, TEXT as TEXT1_1 } from "./partner_terms_v1_1.js?v=20261106e";
+import { VERSION as V1_1, TITLE as T1_1, TEXT as TEXT1_1 } from "./partner_terms_v1_1.js?v=20261107a";
 
 /** @type {Record<string, { version: string, title: string, text: string }>} */
 export const AGREEMENTS = {

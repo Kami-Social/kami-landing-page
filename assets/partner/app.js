@@ -1,7 +1,7 @@
 import { escapeHtml } from "./format.js";
 import {
   renderAgreementTermsSummary,
-} from "./terms-summary.js?v=20261106f";
+} from "./terms-summary.js?v=20261107a";
 import { wireTermTips } from "../ambassador/terms-summary.js";
 import {
   renderPublicLandingHTML,
@@ -9,9 +9,9 @@ import {
   clearPublicLandingMode,
   syncSiteFooter,
 } from "./public-landing.js";
-import { getAgreement, getCurrentAgreementText } from "./agreements/index.js?v=20261106e";
+import { getAgreement, getCurrentAgreementText } from "./agreements/index.js?v=20261107a";
 import { renderImageOrFallback } from "./media.js";
-import { renderPartnerDashboard, readTabFromUrl } from "./dashboard.js?v=20261106e";
+import { renderPartnerDashboard, readTabFromUrl } from "./dashboard.js?v=20261107a";
 import {
   getPortalAuthStorageKey,
   hasLikelyPortalStoredSession,
