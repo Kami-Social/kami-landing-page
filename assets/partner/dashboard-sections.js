@@ -11,7 +11,7 @@ import {
   renderProgramParametersSnapshot,
   renderProgramNotice,
   renderProgramTermsCard,
-} from "./terms-summary.js?v=20261106e";
+} from "./terms-summary.js?v=20261106f";
 import { renderConnectionAction, renderUserIdentityCell } from "./venue-visitors.js?v=20260617k";
 
 const PORTAL_TABS = ["overview", "venues", "events"];

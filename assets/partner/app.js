@@ -1,7 +1,7 @@
 import { escapeHtml } from "./format.js";
 import {
   renderAgreementTermsSummary,
-} from "./terms-summary.js?v=20261106e";
+} from "./terms-summary.js?v=20261106f";
 import { wireTermTips } from "../ambassador/terms-summary.js";
 import {
   renderPublicLandingHTML,

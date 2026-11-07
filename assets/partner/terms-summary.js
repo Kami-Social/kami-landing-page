@@ -126,8 +126,7 @@ export function renderProgramNotice(notice) {
     return `<p class="terms-reminder">A parameter update is posted in your Partner Portal and is not in effect until the notice email is sent. The terms below remain your current parameters.</p>`;
   }
   if (change.status === "scheduled") {
-    const when = change.effective_at ? formatDateTime(change.effective_at) : "the stated effective time";
-    return `<p class="terms-reminder">A parameter update is posted and takes effect ${escapeHtml(when)}. The terms below remain current until then.</p>`;
+    return `<p class="terms-reminder">A parameter update is posted and the notice was accepted. It takes effect as soon as that acceptance is recorded. The terms below remain current until then.</p>`;
   }
   return "";
 }
@@ -147,7 +146,7 @@ export function renderProgramTermsCard(params, { reminder = true } = {}) {
     )
     .join("");
   const reminderHtml = reminder
-    ? `<p class="terms-reminder">Kami may change compensation rates, payout thresholds, qualification requirements, and other Program parameters at any time. The qualification requirement currently in effect is completed registration. This Partner Portal shows that requirement, and any descriptive copy explains it without adding an automated condition by itself. Each referral keeps the compensation rate and qualification requirement in effect when that referral completed registration. A change takes effect on its stated effective date, no earlier than when it is posted here and notice has been sent to your account email, and applies to registrations that complete on or after that time. Later changes do not reprice compensation already accrued. A payout-threshold change does not withdraw a payment obligation that was already triggered or restart that payment period.</p>`
+    ? `<p class="terms-reminder">Kami may change compensation rates, payout thresholds, qualification requirements, and other Program parameters at any time. The qualification requirement currently in effect is completed registration. This Partner Portal shows that requirement, and any descriptive copy explains it without adding an automated condition by itself. Each referral keeps the compensation rate and qualification requirement in effect when that referral completed registration. A change takes effect when it is posted here and the notice email has been accepted, and applies to registrations that complete after that. Later changes do not reprice compensation already accrued. A payout-threshold change does not withdraw a payment obligation that was already triggered or restart that payment period.</p>`
     : "";
   return `<div class="terms-grid">${rows}</div>${reminderHtml}`;
 }
