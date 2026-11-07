@@ -25,7 +25,7 @@ import {
   isValidPortalTab,
   wireAgreementHistory,
   wireNetworkDetails,
-} from "./dashboard-sections.js?v=20260617c";
+} from "./dashboard-sections.js?v=20261106e";
 import { wireAllVenueVisitHistories, wireUserConnectionActions } from "./venue-visitors.js?v=20260617k";
 import { wireAllVenueWalls } from "./venue-wall.js?v=20260617k";
 
@@ -233,7 +233,7 @@ export async function renderPartnerDashboard(ctx) {
   const activeTab = isValidPortalTab(initialTab) ? initialTab : readTabFromUrl();
   const pid = partnerId;
 
-  const [dashboardResult, referrals, payouts, ledger, history, eventsResult, insightsResult, storeRewardsResult, outreachResult] =
+  const [dashboardResult, referrals, payouts, ledger, history, eventsResult, insightsResult, storeRewardsResult, outreachResult, programNoticeResult] =
     await Promise.all([
       safeRpc(rpc, "get_my_partner_dashboard", { p_partner_id: pid }),
       safeRpc(rpc, "get_my_partner_referrals", { p_partner_id: pid }),
@@ -244,6 +244,7 @@ export async function renderPartnerDashboard(ctx) {
       safeRpc(rpc, "get_my_partner_insights", { p_partner_id: pid }),
       safeRpc(rpc, "get_my_partner_store_rewards", { p_partner_id: pid }),
       safeRpc(rpc, "get_my_partner_outreach_recent", { p_partner_id: pid, p_limit: 20 }),
+      safeRpc(rpc, "get_my_partner_program_notices", { p_partner_id: pid }),
     ]);
 
   let dashboard = dashboardResult;
@@ -355,6 +356,7 @@ export async function renderPartnerDashboard(ctx) {
         ledgerTable,
         ledgerEntries,
         history,
+        programNotice: programNoticeResult?.ok ? programNoticeResult : null,
       }),
     venues: () =>
       renderPartnerVenuesTab({

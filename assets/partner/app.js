@@ -1,7 +1,7 @@
 import { escapeHtml } from "./format.js";
 import {
   renderAgreementTermsSummary,
-} from "./terms-summary.js";
+} from "./terms-summary.js?v=20261106e";
 import { wireTermTips } from "../ambassador/terms-summary.js";
 import {
   renderPublicLandingHTML,
@@ -9,9 +9,9 @@ import {
   clearPublicLandingMode,
   syncSiteFooter,
 } from "./public-landing.js";
-import { getAgreement, getCurrentAgreementText } from "./agreements/index.js";
+import { getAgreement, getCurrentAgreementText } from "./agreements/index.js?v=20261106e";
 import { renderImageOrFallback } from "./media.js";
-import { renderPartnerDashboard, readTabFromUrl } from "./dashboard.js?v=20260617c";
+import { renderPartnerDashboard, readTabFromUrl } from "./dashboard.js?v=20261106e";
 import {
   getPortalAuthStorageKey,
   hasLikelyPortalStoredSession,
@@ -433,6 +433,10 @@ function renderAgreementFlow() {
   const agreementText = agreement?.text || getCurrentAgreementText(version);
   const params = agreementStatus.program_parameters;
   const partner = agreementStatus.partner || {};
+  const requestedAcceptance = agreementStatus.acceptance_reason === "requested";
+  const intro = requestedAcceptance
+    ? "Kami has asked you to review and accept an updated Partner Program Agreement. Your earlier acceptance stays on file. Review the agreement below and accept it to continue."
+    : "Review your current partner terms and accept the agreement to continue.";
 
   setRoot(`
     ${renderPartnerSwitcher(agreementStatus.memberships, agreementStatus.partner_id)}
@@ -440,7 +444,7 @@ function renderAgreementFlow() {
       <div class="agreement-panel-top">
         <div class="agreement-panel-head">
           <h2 class="agreement-page-title">Accept Partner Agreement</h2>
-          <p class="agreement-intro">Review your current partner terms and accept the agreement to continue.</p>
+          <p class="agreement-intro">${escapeHtml(intro)}</p>
         </div>
         ${renderAgreementPartnerChip(partner)}
       </div>

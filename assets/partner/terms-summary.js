@@ -1,18 +1,17 @@
 import { escapeHtml, formatMoney, formatDateTime } from "./format.js";
 import {
   formatPayoutThresholdSummary,
-  formatQualifiedReferralSummary,
   formatRateSummary,
   normalizeProgramParameters,
 } from "../ambassador/terms-summary.js";
 
 const TOOLTIPS = {
   qualified_referral:
-    "Qualified Referrals are determined by the current criteria shown in your Partner Portal. Criteria may include registration, verification, activity thresholds, retention, fraud screening, or other program requirements.",
+    "The qualification requirement currently in effect is completed registration with a valid partner referral attribution, subject to validation, fraud, and eligibility review. Entering a code or creating an account does not by itself qualify a referral. The compensation rate is the rate in effect when registration completes. Kami may change the requirement for later registrations by posting it here and sending notice. Descriptive copy explains the current requirement and does not by itself add an automated condition.",
   rate:
-    "Referral compensation applies only when enabled for your partnership. When enabled, your rate is based on the program settings shown here and the parameters snapshot accepted with this Agreement.",
+    "The rate shown here is the current Partner Portal parameter. Each referral keeps the rate effective when that referral completed registration. Later changes do not reprice compensation already accrued.",
   payout_threshold:
-    "When referral compensation applies, approved earnings become eligible for payout once your unpaid approved balance reaches this amount.",
+    "The current payout threshold applies to unpaid compensation that has not already become payable. Raising the threshold does not withdraw a payment obligation that was already triggered, and it does not restart that payment period.",
   payout_schedule:
     "When referral compensation applies, eligible payouts are generally processed according to the schedule shown in your Partner Portal.",
   status:
@@ -53,6 +52,10 @@ function renderTermCard(id, label, value, tooltip) {
   </article>`;
 }
 
+export function formatPartnerQualifiedReferralSummary() {
+  return "Completed registration";
+}
+
 export function formatPartnerRateSummary(params) {
   const cents = params?.rate_cents_per_registration;
   if (cents == null || Number(cents) === 0) {
@@ -84,7 +87,7 @@ export function renderAgreementTermsSummary(params, partner) {
     renderTermCard(
       "qualified",
       "Qualified Referral",
-      formatQualifiedReferralSummary(params),
+      formatPartnerQualifiedReferralSummary(),
       TOOLTIPS.qualified_referral
     ),
     renderTermCard("rate", "Rate", formatPartnerRateSummary(params), TOOLTIPS.rate),
@@ -112,14 +115,27 @@ export function renderAgreementTermsSummary(params, partner) {
     <h3 class="terms-summary-title">Current Partner Terms</h3>
     <p class="terms-summary-lede">Review your current partner settings before accepting the agreement.</p>
     <div class="terms-summary-grid">${cards}</div>
-    <p class="terms-summary-footer">These are your current partner settings. Program terms may change over time as described in the agreement. Your Partner Portal always shows the current terms.</p>
+    <p class="terms-summary-footer">These are the current Partner Portal parameters. The qualification requirement currently in effect is completed registration. Each referral keeps the compensation rate and qualification requirement in effect when that referral completed registration, as described in Section 5. Descriptive copy does not by itself add an automated condition. Later changes do not reprice compensation already accrued, and a threshold change does not withdraw a payment obligation that was already triggered.</p>
   </div>`;
+}
+
+export function renderProgramNotice(notice) {
+  const change = notice?.parameter_change;
+  if (!notice || notice.ok === false || !change) return "";
+  if (change.status === "pending_notice") {
+    return `<p class="terms-reminder">A parameter update is posted in your Partner Portal and is not in effect until the notice email is sent. The terms below remain your current parameters.</p>`;
+  }
+  if (change.status === "scheduled") {
+    const when = change.effective_at ? formatDateTime(change.effective_at) : "the stated effective time";
+    return `<p class="terms-reminder">A parameter update is posted and takes effect ${escapeHtml(when)}. The terms below remain current until then.</p>`;
+  }
+  return "";
 }
 
 export function renderProgramTermsCard(params, { reminder = true } = {}) {
   const normalized = normalizeProgramParameters(params) || {};
   const rows = [
-    ["Qualified Referral", capitalizeWords(formatQualifiedReferralSummary(normalized))],
+    ["Qualified Referral", capitalizeWords(formatPartnerQualifiedReferralSummary())],
     ["Rate Schedule", capitalizeWords(formatPartnerRateSummary(normalized))],
     ["Tier Cap", capitalizeWords(formatPartnerTierCapSummary(normalized))],
     ["Payout Threshold", capitalizeWords(formatPayoutThresholdSummary(normalized))],
@@ -131,7 +147,7 @@ export function renderProgramTermsCard(params, { reminder = true } = {}) {
     )
     .join("");
   const reminderHtml = reminder
-    ? `<p class="terms-reminder">Program terms, rates, qualification requirements, and tier caps may change from time to time. The current terms shown here apply when posted. Your Partner Portal always shows the current settings.</p>`
+    ? `<p class="terms-reminder">Kami may change compensation rates, payout thresholds, qualification requirements, and other Program parameters at any time. The qualification requirement currently in effect is completed registration. This Partner Portal shows that requirement, and any descriptive copy explains it without adding an automated condition by itself. Each referral keeps the compensation rate and qualification requirement in effect when that referral completed registration. A change takes effect on its stated effective date, no earlier than when it is posted here and notice has been sent to your account email, and applies to registrations that complete on or after that time. Later changes do not reprice compensation already accrued. A payout-threshold change does not withdraw a payment obligation that was already triggered or restart that payment period.</p>`
     : "";
   return `<div class="terms-grid">${rows}</div>${reminderHtml}`;
 }
@@ -147,7 +163,7 @@ export function renderProgramParametersSnapshot(params, display = {}) {
     display.tier_cap_display ||
     formatPartnerTierCapSummary(normalized);
   const rows = [
-    ["Qualified Referral", capitalizeWords(formatQualifiedReferralSummary(normalized))],
+    ["Qualified Referral", capitalizeWords(formatPartnerQualifiedReferralSummary())],
     ["Rate Schedule", capitalizeWords(formatPartnerRateSummary(normalized))],
     ["Tier Cap", tierCap],
     ["Payout Threshold", capitalizeWords(threshold)],

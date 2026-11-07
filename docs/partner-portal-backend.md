@@ -52,12 +52,9 @@ The public partner portal at `/partner` uses Supabase Auth plus self-service RPC
 
 ## Agreement versioning
 
-Agreement text lives in `assets/partner/agreements/`. When legal publishes a new version:
+Agreement text lives in `assets/partner/agreements/`. Version 1.0 is `partner_terms_v1`. Version 1.1 is `partner_terms_v1_1`.
 
-1. Add `partner_terms_v2.js` (or similar).
-2. Register it in `assets/partner/agreements/index.js`.
-3. Set `partner_program_settings.current_agreement_version` to the new version.
-4. Partners without an acceptance for that version see the agreement flow again.
+`partner_program_settings.current_agreement_version` is the version offered to partners who have not accepted an agreement yet. Changing it does not ask existing partners to accept again. To request acceptance, call `kami_admin_request_partner_agreement_acceptance` for selected partners or all existing partners. Do not set the offered version to `partner_terms_v1_1` until that rollout is intended.
 
 ## Known gaps (V1)
 

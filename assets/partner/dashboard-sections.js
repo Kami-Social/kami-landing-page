@@ -9,8 +9,9 @@ import {
 import { renderImageOrFallback } from "./media.js";
 import {
   renderProgramParametersSnapshot,
+  renderProgramNotice,
   renderProgramTermsCard,
-} from "./terms-summary.js";
+} from "./terms-summary.js?v=20261106e";
 import { renderConnectionAction, renderUserIdentityCell } from "./venue-visitors.js?v=20260617k";
 
 const PORTAL_TABS = ["overview", "venues", "events"];
@@ -631,6 +632,7 @@ export function renderPartnerOverviewTab({
   ledgerTable,
   ledgerEntries,
   history,
+  programNotice = null,
 }) {
   const performance = `${renderNetworkSummary({ venues, events })}
     ${renderInsightsSummaryCard(insights)}`;
@@ -644,6 +646,7 @@ export function renderPartnerOverviewTab({
       programParameters,
       referralsTable,
       payoutTable,
+      programNotice,
     })}`;
 
   const account = `${renderChangeLedger(ledgerTable, ledgerEntries)}
@@ -716,6 +719,7 @@ export function renderReferralProgram({
   programParameters,
   referralsTable,
   payoutTable,
+  programNotice = null,
 }) {
   const m = metrics || {};
   const referralLink = String(referral.link || "").trim();
@@ -762,6 +766,7 @@ export function renderReferralProgram({
 
     <details class="portal-details">
       <summary class="portal-details-summary">View Program Terms</summary>
+      ${renderProgramNotice(programNotice)}
       ${renderProgramTermsCard(programParameters, { reminder: true })}
     </details>
 
