@@ -1,7 +1,6 @@
 import { escapeHtml, formatMoney, formatDateTime } from "./format.js";
 import {
   formatPayoutThresholdSummary,
-  formatRateSummary,
   normalizeProgramParameters,
 } from "../ambassador/terms-summary.js";
 
@@ -40,7 +39,7 @@ function renderTermsValueHtml(value) {
 }
 
 function renderTermCard(id, label, value, tooltip) {
-  const displayValue = capitalizeWords(value);
+  const displayValue = id === "rate" ? value : capitalizeWords(value);
   const lines = renderTermsValueHtml(displayValue);
 
   return `<article class="term-card">
@@ -57,11 +56,17 @@ export function formatPartnerQualifiedReferralSummary() {
 }
 
 export function formatPartnerRateSummary(params) {
-  const cents = params?.rate_cents_per_registration;
-  if (cents == null || Number(cents) === 0) {
-    return "Not enabled for this partner";
+  if (!Array.isArray(params?.rate_tiers) || !params.rate_tiers.length) {
+    return params?.rate_cents_per_registration == null ? "Not set" : `Referrals 1 onward: ${formatMoney(Number(params.rate_cents_per_registration))} each`;
   }
-  return formatRateSummary(params);
+  let start = 1;
+  return params.rate_tiers.map(tier => {
+    const end = tier.referral_count == null ? null : start + Number(tier.referral_count) - 1;
+    const amount = formatMoney(Number(tier.rate_cents)).replace(/\.00$/, "");
+    const line = `Referrals ${start}${end == null ? " onward" : `–${end}`}: ${amount} each`;
+    if (end != null) start = end + 1;
+    return line;
+  }).join("\n");
 }
 
 export function formatPayoutScheduleSummary(params) {
@@ -135,7 +140,7 @@ export function renderProgramTermsCard(params, { reminder = true } = {}) {
   const normalized = normalizeProgramParameters(params) || {};
   const rows = [
     ["Qualified Referral", capitalizeWords(formatPartnerQualifiedReferralSummary())],
-    ["Rate Schedule", capitalizeWords(formatPartnerRateSummary(normalized))],
+    ["Rate Schedule", formatPartnerRateSummary(normalized)],
     ["Tier Cap", capitalizeWords(formatPartnerTierCapSummary(normalized))],
     ["Payout Threshold", capitalizeWords(formatPayoutThresholdSummary(normalized))],
     ["Last Updated", formatDateTime(normalized.last_updated)],
@@ -146,9 +151,11 @@ export function renderProgramTermsCard(params, { reminder = true } = {}) {
     )
     .join("");
   const reminderHtml = reminder
-    ? `<p class="terms-reminder">Kami may change compensation rates, payout thresholds, qualification requirements, and other Program parameters at any time. The qualification requirement currently in effect is completed registration. This Partner Portal shows that requirement, and any descriptive copy explains it without adding an automated condition by itself. Each referral keeps the compensation rate and qualification requirement in effect when that referral completed registration. A change takes effect once it has been posted here and the notice email has been sent, and applies to registrations that complete after that. Later changes do not reprice compensation already accrued. A payout-threshold change does not withdraw a payment obligation that was already triggered or restart that payment period.</p>`
+    ? `<p class="terms-reminder">Kami may change compensation rates, payout thresholds, qualification requirements, and other Program parameters at any time. The qualification requirement currently in effect is completed registration. This Partner Portal shows that requirement, and any descriptive copy explains it without adding an automated condition by itself. Each referral keeps the compensation rate and qualification requirement in effect when that referral completed registration. Saved terms apply immediately to future qualifying referrals, independently of notification delivery. Tier progress uses lifetime qualified referrals and does not reset. Once a finite paid schedule is exhausted, referral tracking continues with unpaid referrals; extending the schedule does not retroactively pay those referrals. Later changes do not reprice compensation already accrued. A payout-threshold change does not withdraw a payment obligation that was already triggered or restart that payment period.</p>`
     : "";
-  return `<div class="terms-grid">${rows}</div>${reminderHtml}`;
+  const exhausted = normalized.paid_schedule_exhausted
+    ? `<p class="terms-reminder">Paid schedule exhausted. Referral tracking continues; next referral #${escapeHtml(String(normalized.next_referral_number))} is unpaid. Previously earned amounts remain payable.</p>` : "";
+  return `<div class="terms-grid">${rows}</div>${exhausted}${reminderHtml}`;
 }
 
 export function renderProgramParametersSnapshot(params, display = {}) {
@@ -163,7 +170,7 @@ export function renderProgramParametersSnapshot(params, display = {}) {
     formatPartnerTierCapSummary(normalized);
   const rows = [
     ["Qualified Referral", capitalizeWords(formatPartnerQualifiedReferralSummary())],
-    ["Rate Schedule", capitalizeWords(formatPartnerRateSummary(normalized))],
+    ["Rate Schedule", formatPartnerRateSummary(normalized)],
     ["Tier Cap", tierCap],
     ["Payout Threshold", capitalizeWords(threshold)],
     ["Last Updated", formatDateTime(normalized.last_updated)],
@@ -175,3 +182,4 @@ export function renderProgramParametersSnapshot(params, display = {}) {
     .join("");
   return `<div class="terms-grid snapshot-terms-grid">${rows}</div>`;
 }
+
