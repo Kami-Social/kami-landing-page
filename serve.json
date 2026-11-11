@@ -8,7 +8,8 @@
     { "source": "/delete-account", "destination": "/delete-account.html" },
     { "source": "/safety", "destination": "/safety.html" },
     { "source": "/ambassador", "destination": "/ambassador/index.html" },
-    { "source": "/partner", "destination": "/partner/index.html" }
+    { "source": "/partner", "destination": "/partner/index.html" },
+    { "source": "/model", "destination": "/api/model" }
   ],
   "redirects": [
     { "source": "/download", "destination": "/#download", "type": 301 },

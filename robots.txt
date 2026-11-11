@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /model
+Disallow: /api/model
 
 Sitemap: https://www.kamisocial.com/sitemap.xml

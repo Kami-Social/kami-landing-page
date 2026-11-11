@@ -39,6 +39,10 @@
     {
       "source": "/partner",
       "destination": "/partner/index.html"
+    },
+    {
+      "source": "/model",
+      "destination": "/api/model"
     }
   ],
   "redirects": [
