@@ -1,4 +1,5 @@
 {
+  "trailingSlash": false,
   "rewrites": [
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },
@@ -9,10 +10,14 @@
     { "source": "/safety", "destination": "/safety.html" },
     { "source": "/ambassador", "destination": "/ambassador/index.html" },
     { "source": "/partner", "destination": "/partner/index.html" },
+    { "source": "/invite/:code", "destination": "/invite/index.html" },
     { "source": "/model", "destination": "/api/model" }
   ],
   "redirects": [
+    { "source": "/index.html", "destination": "/", "type": 301 },
     { "source": "/download", "destination": "/#download", "type": 301 },
+    { "source": "/faq", "destination": "/#faq", "type": 301 },
+    { "source": "/beta.html", "destination": "/beta", "type": 301 },
     { "source": "/privacy.html", "destination": "/privacy", "type": 301 },
     { "source": "/terms.html", "destination": "/terms", "type": 301 },
     { "source": "/how-it-works.html", "destination": "/how-it-works", "type": 301 },

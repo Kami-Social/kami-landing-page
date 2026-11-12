@@ -1,0 +1,14 @@
+# Keep private notes, backups, and local tooling out of the public deployment
+docs/
+backups/
+scripts/
+supabase/
+node_modules/
+*.md
+.env*
+.DS_Store
+serve.json
+AGENTS.md
+invite/_archive/
+beta/PRIVATE_BETA_PAGE_NOTES.md
+assets/ambassador/archive/

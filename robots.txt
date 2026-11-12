@@ -1,6 +1,14 @@
 User-agent: *
 Allow: /
+
+# Utility / API surfaces (not marketing pages)
+Disallow: /api/
 Disallow: /model
-Disallow: /api/model
+Disallow: /password-reset
+
+# Private or non-marketing surfaces (also noindex in page/headers)
+Disallow: /beta
+Disallow: /investor
+Disallow: /invite
 
 Sitemap: https://www.kamisocial.com/sitemap.xml
