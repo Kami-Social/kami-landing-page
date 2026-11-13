@@ -379,6 +379,8 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
 
 .pillar-carousel{
   --pillar-card-max:760px;
+  --pillar-arrow:42px;
+  --pillar-arrow-gap:14px;
   display:none;
   position:relative;
   margin-top:4px;
@@ -432,6 +434,7 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
   bottom:auto;
 }
 .steps-carousel .how-card{width:100%;height:100%;margin:0}
+.steps-carousel .pillar-carousel-nav{top:41px}
 .pillar-carousel-slide .pillar-card{
   flex:0 0 auto;
   width:min(100%,var(--pillar-card-max));
@@ -447,6 +450,41 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
   user-select:none;
   pointer-events:none;
 }
+.pillar-carousel-nav{
+  position:absolute;
+  z-index:2;
+  top:50%;
+  transform:translateY(-50%);
+  width:var(--pillar-arrow);
+  height:var(--pillar-arrow);
+  padding:0;
+  border-radius:50%;
+  border:1px solid rgba(188,158,255,.36);
+  background:rgba(8,7,22,.72);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,.28);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  transition:border-color .2s ease,background .2s ease;
+}
+@supports (top:1cqi){
+  .pillar-carousel:not(.scene-carousel):not(.steps-carousel) .pillar-carousel-nav{
+    top:calc(min(100cqi,var(--pillar-card-max)) * .3125);
+  }
+}
+.pillar-carousel-nav--prev{left:10px}
+.pillar-carousel-nav--next{right:10px}
+.pillar-carousel-nav svg{width:12px;height:12px;fill:currentColor;display:block}
+.pillar-carousel-nav:hover:not(:disabled){
+  border-color:rgba(165,107,255,.55);
+  background:rgba(16,12,32,.95);
+}
+.pillar-carousel-nav:disabled{display:none}
+.pillar-carousel-nav:focus-visible,
 .pillar-carousel-dot:focus-visible,
 .pillar-carousel-track:focus-visible{
   outline:2px solid #c7aaff;
@@ -495,6 +533,7 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
 }
 @media (prefers-reduced-motion:reduce){
   .pillar-carousel-track{scroll-behavior:auto}
+  .pillar-carousel-nav,
   .pillar-carousel-dot::before,
   .pillar-carousel .pillar-card-media img,
   .scene-carousel .place{transition:none}
@@ -535,6 +574,8 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
               <div class="pillar-carousel-slide" id="scene-slide-coffee" data-carousel-slide role="group" aria-roledescription="slide" aria-label="3 of 4"><article class="place coffee"><img src="assets/coffee-card.png" alt="At a coffee shop" draggable="false" /></article></div>
               <div class="pillar-carousel-slide" id="scene-slide-event" data-carousel-slide role="group" aria-roledescription="slide" aria-label="4 of 4"><article class="place event"><img src="assets/event-card.png" alt="At a community event" draggable="false" /></article></div>
             </div>
+            <button type="button" class="pillar-carousel-nav pillar-carousel-nav--prev" data-carousel-prev aria-label="Previous image" aria-controls="scene-carousel-track" disabled><svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M6.5 1.5 2.5 5l4 3.5V1.5Z" /></svg></button>
+            <button type="button" class="pillar-carousel-nav pillar-carousel-nav--next" data-carousel-next aria-label="Next image" aria-controls="scene-carousel-track"><svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M3.5 1.5 7.5 5l-4 3.5V1.5Z" /></svg></button>
           </div>
           <div class="pillar-carousel-dots" role="tablist" aria-label="Choose a nearby place">
             <button type="button" class="pillar-carousel-dot" role="tab" id="scene-tab-park" aria-controls="scene-slide-park" aria-label="At the park" aria-selected="true" aria-current="true" data-carousel-dot data-slide="0"></button>
@@ -556,6 +597,8 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
             <div class="pillar-carousel-slide" id="steps-slide-3" data-carousel-slide role="group" aria-roledescription="slide" aria-label="Step 3 of 4"><article class="how-card"><div class="how-number">3</div><h3>Discover what's nearby</h3><p>Browse nearby people, places, and events, or let Kami notify you when someone interesting is around.</p></article></div>
             <div class="pillar-carousel-slide" id="steps-slide-4" data-carousel-slide role="group" aria-roledescription="slide" aria-label="Step 4 of 4"><article class="how-card"><div class="how-number">4</div><h3>Connect in real life</h3><p>Use the context as an opener, then actually meet, talk, train, walk, work, or hang out in the place you already are.</p></article></div>
           </div>
+          <button type="button" class="pillar-carousel-nav pillar-carousel-nav--prev" data-carousel-prev aria-label="Previous step" aria-controls="steps-carousel-track" disabled><svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M6.5 1.5 2.5 5l4 3.5V1.5Z" /></svg></button>
+          <button type="button" class="pillar-carousel-nav pillar-carousel-nav--next" data-carousel-next aria-label="Next step" aria-controls="steps-carousel-track"><svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M3.5 1.5 7.5 5l-4 3.5V1.5Z" /></svg></button>
         </div>
         <div class="pillar-carousel-dots" role="tablist" aria-label="Choose a step">
           <button type="button" class="pillar-carousel-dot" role="tab" id="steps-tab-1" aria-controls="steps-slide-1" aria-label="Step 1, Download Kami" aria-selected="true" aria-current="true" data-carousel-dot data-slide="0"></button>
@@ -593,6 +636,8 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
               </article>
             </div>
           </div>
+          <button type="button" class="pillar-carousel-nav pillar-carousel-nav--prev" data-pillar-prev aria-label="Previous slide" aria-controls="pillar-carousel-track" disabled><svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M6.5 1.5 2.5 5l4 3.5V1.5Z" /></svg></button>
+          <button type="button" class="pillar-carousel-nav pillar-carousel-nav--next" data-pillar-next aria-label="Next slide" aria-controls="pillar-carousel-track"><svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M3.5 1.5 7.5 5l-4 3.5V1.5Z" /></svg></button>
         </div>
         <div class="pillar-carousel-dots" role="tablist" aria-label="Choose a nearby layer">
           <button type="button" class="pillar-carousel-dot" role="tab" id="pillar-tab-people" aria-controls="pillar-slide-people" aria-label="People" aria-selected="true" aria-current="true" data-pillar-dot data-slide="0"></button>
@@ -957,8 +1002,10 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
   var track = root.querySelector("[data-carousel-track], [data-pillar-track]");
   var slides = Array.prototype.slice.call(root.querySelectorAll("[data-carousel-slide], [data-pillar-slide]"));
   var dots = Array.prototype.slice.call(root.querySelectorAll("[data-carousel-dot], [data-pillar-dot]"));
+  var prevBtn = root.querySelector("[data-carousel-prev], [data-pillar-prev]");
+  var nextBtn = root.querySelector("[data-carousel-next], [data-pillar-next]");
   var statusEl = root.querySelector("[data-carousel-status], [data-pillar-status]");
-  if (!track || !slides.length || !dots.length) return;
+  if (!track || !slides.length || !dots.length || !prevBtn || !nextBtn) return;
 
   var labels = slides.map(function (slide, index) {
     var heading = slide.querySelector("h3");
@@ -992,6 +1039,8 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
       if (current) slide.removeAttribute("inert");
       else slide.setAttribute("inert", "");
     });
+    prevBtn.disabled = index === 0;
+    nextBtn.disabled = index === slides.length - 1;
     if (announced && changed && statusEl) {
       statusEl.textContent = labels[index] + ". Slide " + (index + 1) + " of " + slides.length + ".";
     }
@@ -1044,6 +1093,14 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
   track.addEventListener("scrollend", function () {
     scrollingTo = null;
     setActive(nearestIndex());
+  });
+
+  prevBtn.addEventListener("click", function () {
+    goTo(Math.max(0, activeIndex - 1));
+  });
+
+  nextBtn.addEventListener("click", function () {
+    goTo(Math.min(slides.length - 1, activeIndex + 1));
   });
 
   dots.forEach(function (dot) {
