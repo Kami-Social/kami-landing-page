@@ -420,6 +420,33 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
   align-items:stretch;
   box-sizing:border-box;
 }
+.pillar-carousel--peek{--peek-size:16%;--peek-gap:12px}
+.pillar-carousel--peek .pillar-carousel-slide{
+  flex-basis:calc(100% - var(--peek-size));
+  min-width:calc(100% - var(--peek-size));
+  padding-inline-end:var(--peek-gap);
+}
+.pillar-carousel--center-nav .pillar-carousel-nav{top:50%}
+.pillar-carousel--peek .pillar-carousel-nav--prev{left:10px}
+.pillar-carousel--peek .pillar-carousel-nav--next{
+  right:auto;
+  left:calc(100% - var(--peek-size) - var(--peek-gap) - var(--pillar-arrow) - 10px);
+}
+.scene-carousel,
+.steps-carousel{display:none}
+.scene-carousel .place{
+  position:relative;
+  width:100%;
+  height:auto;
+  aspect-ratio:1.61/1;
+  margin:0;
+  left:auto;
+  right:auto;
+  top:auto;
+  bottom:auto;
+}
+.steps-carousel .how-card{width:100%;height:100%;margin:0}
+.steps-carousel.pillar-carousel--center-nav .pillar-carousel-nav{top:41px}
 .pillar-carousel-slide .pillar-card{
   flex:0 0 auto;
   width:min(100%,var(--pillar-card-max));
@@ -521,12 +548,24 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
   .pillar-carousel-track{scroll-behavior:auto}
   .pillar-carousel-nav,
   .pillar-carousel-dot::before,
-  .pillar-carousel .pillar-card-media img{transition:none}
-  .pillar-carousel .pillar-card:hover .pillar-card-media img{transform:none;filter:none}
+  .pillar-carousel .pillar-card-media img,
+  .scene-carousel .place{transition:none}
+  .pillar-carousel .pillar-card:hover .pillar-card-media img,
+  .scene-carousel .place:hover{transform:none;filter:none}
 }
 @media (max-width:980px){
   #nearby-layer .how-grid{display:none}
   .pillar-carousel{display:block}
+  .scene-carousel,
+  .steps-carousel{display:none}
+}
+@media (max-width:720px){
+  .hero .scene>.arc,
+  .hero .scene>.center-mark,
+  .hero .scene>.place{display:none}
+  .scene-carousel,
+  .steps-carousel{display:block}
+  #how-it-works .how-grid{display:none}
 }
 
 </style>
@@ -539,17 +578,56 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
       <div class="eyebrow-wrap"><div class="eyebrow"><span class="pin">📍</span><span>Nearby discovery for real life</span></div></div>
       <h1>Discover what's<br />happening nearby.</h1>
       <p>Kami helps you find nearby people, places, and events worth showing up for, then gives you the context to connect in real life.</p>
-      <div class="scene" aria-label="Kami nearby discovery across people, places, events, and community activity"><div class="arc"></div><div class="arc two"></div><div class="center-mark"><img class="logo-mark" src="assets/k-mark-transparent.png" alt="Kami" /></div><article class="place park"><img src="assets/park-card.png" alt="At the park" /></article><article class="place gym"><img src="assets/gym-card.png" alt="At the gym" /></article><article class="place coffee"><img src="assets/coffee-card.png" alt="At a coffee shop" /></article><article class="place event"><img src="assets/event-card.png" alt="At a community event" /></article></div>
+      <div class="scene" aria-label="Kami nearby discovery across people, places, events, and community activity"><div class="arc"></div><div class="arc two"></div><div class="center-mark"><img class="logo-mark" src="assets/k-mark-transparent.png" alt="Kami" /></div><article class="place park"><img src="assets/park-card.png" alt="At the park" /></article><article class="place gym"><img src="assets/gym-card.png" alt="At the gym" /></article><article class="place coffee"><img src="assets/coffee-card.png" alt="At a coffee shop" /></article><article class="place event"><img src="assets/event-card.png" alt="At a community event" /></article>
+        <div class="pillar-carousel pillar-carousel--peek pillar-carousel--center-nav scene-carousel" data-home-carousel role="region" aria-roledescription="carousel" aria-label="Nearby places">
+          <div class="pillar-carousel-shell">
+            <div class="pillar-carousel-track" id="scene-carousel-track" data-carousel-track tabindex="0" aria-label="Nearby place images">
+              <div class="pillar-carousel-slide" id="scene-slide-park" data-carousel-slide role="group" aria-roledescription="slide" aria-label="1 of 4"><article class="place park"><img src="assets/park-card.png" alt="At the park" draggable="false" /></article></div>
+              <div class="pillar-carousel-slide" id="scene-slide-gym" data-carousel-slide role="group" aria-roledescription="slide" aria-label="2 of 4"><article class="place gym"><img src="assets/gym-card.png" alt="At the gym" draggable="false" /></article></div>
+              <div class="pillar-carousel-slide" id="scene-slide-coffee" data-carousel-slide role="group" aria-roledescription="slide" aria-label="3 of 4"><article class="place coffee"><img src="assets/coffee-card.png" alt="At a coffee shop" draggable="false" /></article></div>
+              <div class="pillar-carousel-slide" id="scene-slide-event" data-carousel-slide role="group" aria-roledescription="slide" aria-label="4 of 4"><article class="place event"><img src="assets/event-card.png" alt="At a community event" draggable="false" /></article></div>
+            </div>
+            <button type="button" class="pillar-carousel-nav pillar-carousel-nav--prev" data-carousel-prev aria-label="Previous image" aria-controls="scene-carousel-track"><svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M6.5 1.5 2.5 5l4 3.5V1.5Z" /></svg></button>
+            <button type="button" class="pillar-carousel-nav pillar-carousel-nav--next" data-carousel-next aria-label="Next image" aria-controls="scene-carousel-track"><svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M3.5 1.5 7.5 5l-4 3.5V1.5Z" /></svg></button>
+          </div>
+          <div class="pillar-carousel-dots" role="tablist" aria-label="Choose a nearby place">
+            <button type="button" class="pillar-carousel-dot" role="tab" id="scene-tab-park" aria-controls="scene-slide-park" aria-label="At the park" aria-selected="true" aria-current="true" data-carousel-dot data-slide="0"></button>
+            <button type="button" class="pillar-carousel-dot" role="tab" id="scene-tab-gym" aria-controls="scene-slide-gym" aria-label="At the gym" data-carousel-dot data-slide="1"></button>
+            <button type="button" class="pillar-carousel-dot" role="tab" id="scene-tab-coffee" aria-controls="scene-slide-coffee" aria-label="At a coffee shop" data-carousel-dot data-slide="2"></button>
+            <button type="button" class="pillar-carousel-dot" role="tab" id="scene-tab-event" aria-controls="scene-slide-event" aria-label="At a community event" data-carousel-dot data-slide="3"></button>
+          </div>
+          <p class="pillar-carousel-status" data-carousel-status aria-live="polite"></p>
+        </div>
+      </div>
       <div class="feature-row" id="features"><div class="mini-card"><div class="icon"><svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg></div><h3>Discover nearby</h3><p>See people, places, and events around you without digging through noisy feeds.</p></div><div class="mini-card"><div class="icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h3>Find context</h3><p>Kami uses lightweight social context to make nearby discovery feel less random.</p></div><div class="mini-card"><div class="icon"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg></div><h3>Show up</h3><p>Explore what is happening around you and choose where you actually want to be.</p></div><div class="mini-card"><div class="icon"><svg viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></div><h3>Connect in real life</h3><p>Use Kami as an opener, then meet, talk, train, work, or hang out in the place you already are.</p></div></div>
     </section>
     <section id="how-it-works" class="container panel scroll-anchor"><div class="section-kicker">How It Works</div><h2 class="section-title">From nearby discovery to real-life connection.</h2><p class="section-sub">Kami helps you discover people, places, and events around you, then turns nearby context into easier real-world connection.</p><div class="how-grid"><div class="how-card"><div class="how-number">1</div><h3>Download Kami</h3><p>Join the Kami beta on Android or iPhone through Google Play or TestFlight.</p></div><div class="how-card"><div class="how-number">2</div><h3>Add your context</h3><p>Connect your Instagram so Kami can understand enough public context to make nearby discovery feel less random.</p></div><div class="how-card"><div class="how-number">3</div><h3>Discover what's nearby</h3><p>Browse nearby people, places, and events, or let Kami notify you when someone interesting is around.</p></div><div class="how-card"><div class="how-number">4</div><h3>Connect in real life</h3><p>Use the context as an opener, then actually meet, talk, train, walk, work, or hang out in the place you already are.</p></div></div>
+      <div class="pillar-carousel pillar-carousel--peek pillar-carousel--center-nav steps-carousel" data-home-carousel role="region" aria-roledescription="carousel" aria-label="How Kami works">
+        <div class="pillar-carousel-shell">
+          <div class="pillar-carousel-track" id="steps-carousel-track" data-carousel-track tabindex="0" aria-label="How it works steps">
+            <div class="pillar-carousel-slide" id="steps-slide-1" data-carousel-slide role="group" aria-roledescription="slide" aria-label="Step 1 of 4"><article class="how-card"><div class="how-number">1</div><h3>Download Kami</h3><p>Join the Kami beta on Android or iPhone through Google Play or TestFlight.</p></article></div>
+            <div class="pillar-carousel-slide" id="steps-slide-2" data-carousel-slide role="group" aria-roledescription="slide" aria-label="Step 2 of 4"><article class="how-card"><div class="how-number">2</div><h3>Add your context</h3><p>Connect your Instagram so Kami can understand enough public context to make nearby discovery feel less random.</p></article></div>
+            <div class="pillar-carousel-slide" id="steps-slide-3" data-carousel-slide role="group" aria-roledescription="slide" aria-label="Step 3 of 4"><article class="how-card"><div class="how-number">3</div><h3>Discover what's nearby</h3><p>Browse nearby people, places, and events, or let Kami notify you when someone interesting is around.</p></article></div>
+            <div class="pillar-carousel-slide" id="steps-slide-4" data-carousel-slide role="group" aria-roledescription="slide" aria-label="Step 4 of 4"><article class="how-card"><div class="how-number">4</div><h3>Connect in real life</h3><p>Use the context as an opener, then actually meet, talk, train, walk, work, or hang out in the place you already are.</p></article></div>
+          </div>
+          <button type="button" class="pillar-carousel-nav pillar-carousel-nav--prev" data-carousel-prev aria-label="Previous step" aria-controls="steps-carousel-track"><svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M6.5 1.5 2.5 5l4 3.5V1.5Z" /></svg></button>
+          <button type="button" class="pillar-carousel-nav pillar-carousel-nav--next" data-carousel-next aria-label="Next step" aria-controls="steps-carousel-track"><svg viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M3.5 1.5 7.5 5l-4 3.5V1.5Z" /></svg></button>
+        </div>
+        <div class="pillar-carousel-dots" role="tablist" aria-label="Choose a step">
+          <button type="button" class="pillar-carousel-dot" role="tab" id="steps-tab-1" aria-controls="steps-slide-1" aria-label="Step 1, Download Kami" aria-selected="true" aria-current="true" data-carousel-dot data-slide="0"></button>
+          <button type="button" class="pillar-carousel-dot" role="tab" id="steps-tab-2" aria-controls="steps-slide-2" aria-label="Step 2, Add your context" data-carousel-dot data-slide="1"></button>
+          <button type="button" class="pillar-carousel-dot" role="tab" id="steps-tab-3" aria-controls="steps-slide-3" aria-label="Step 3, Discover what's nearby" data-carousel-dot data-slide="2"></button>
+          <button type="button" class="pillar-carousel-dot" role="tab" id="steps-tab-4" aria-controls="steps-slide-4" aria-label="Step 4, Connect in real life" data-carousel-dot data-slide="3"></button>
+        </div>
+        <p class="pillar-carousel-status" data-carousel-status aria-live="polite"></p>
+      </div>
       <div class="learn-more-row"><a class="learn-more-pill" href="/how-it-works"><span>Learn more about how Kami works</span><b>→</b></a></div></section>
     <section id="nearby-layer" class="container panel scroll-anchor">
       <div class="section-kicker">Nearby discovery</div>
       <h2 class="section-title">People, places, and events in one nearby layer.</h2>
       <p class="section-sub">Kami brings the full nearby picture together so you can explore, show up, and connect without switching between apps.</p>
       <div class="how-grid pillars-grid"><div class="how-card pillar-card"><div class="pillar-card-media"><img src="assets/homepage-pillar-people.png" alt="Two people connecting on a rooftop nearby" loading="lazy" width="640" height="400" /></div><div class="pillar-card-body"><h3>People</h3><p>See who is around you right now, with just enough context to make saying hi feel natural.</p></div></div><div class="how-card pillar-card"><div class="pillar-card-media"><img src="assets/homepage-pillar-places.png" alt="A cozy outdoor café and nearby hangout spot" loading="lazy" width="640" height="400" /></div><div class="pillar-card-body"><h3>Places</h3><p>Find nearby venues, hangouts, gyms, coffee shops, and community spots worth exploring.</p></div></div><div class="how-card pillar-card"><div class="pillar-card-media"><img src="assets/homepage-pillar-events.png" alt="A live music event happening nearby" loading="lazy" width="640" height="400" /></div><div class="pillar-card-body"><h3>Events</h3><p>Discover live and upcoming events happening around you, from casual meetups to local experiences.</p></div></div></div>
-      <div class="pillar-carousel" data-pillar-carousel role="region" aria-roledescription="carousel" aria-label="People, places, and events">
+      <div class="pillar-carousel" data-home-carousel data-pillar-carousel role="region" aria-roledescription="carousel" aria-label="People, places, and events">
         <div class="pillar-carousel-shell">
           <div class="pillar-carousel-track" id="pillar-carousel-track" data-pillar-track tabindex="0" aria-label="Nearby layer slides">
             <div class="pillar-carousel-slide" id="pillar-slide-people" data-pillar-slide role="group" aria-roledescription="slide" aria-label="1 of 3">
@@ -937,20 +1015,21 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
 
 <script>
 (function () {
-  var root = document.querySelector("[data-pillar-carousel]");
-  if (!root) return;
-
-  var track = root.querySelector("[data-pillar-track]");
-  var slides = Array.prototype.slice.call(root.querySelectorAll("[data-pillar-slide]"));
-  var dots = Array.prototype.slice.call(root.querySelectorAll("[data-pillar-dot]"));
-  var prevBtn = root.querySelector("[data-pillar-prev]");
-  var nextBtn = root.querySelector("[data-pillar-next]");
-  var statusEl = root.querySelector("[data-pillar-status]");
+  function initCarousel(root) {
+  var track = root.querySelector("[data-carousel-track], [data-pillar-track]");
+  var slides = Array.prototype.slice.call(root.querySelectorAll("[data-carousel-slide], [data-pillar-slide]"));
+  var dots = Array.prototype.slice.call(root.querySelectorAll("[data-carousel-dot], [data-pillar-dot]"));
+  var prevBtn = root.querySelector("[data-carousel-prev], [data-pillar-prev]");
+  var nextBtn = root.querySelector("[data-carousel-next], [data-pillar-next]");
+  var statusEl = root.querySelector("[data-carousel-status], [data-pillar-status]");
   if (!track || !slides.length || !dots.length || !prevBtn || !nextBtn) return;
 
-  var labels = slides.map(function (slide) {
+  var labels = slides.map(function (slide, index) {
     var heading = slide.querySelector("h3");
-    return heading ? heading.textContent.trim() : "Slide";
+    if (heading && heading.textContent.trim()) return heading.textContent.trim();
+    var img = slide.querySelector("img");
+    if (img && img.alt) return img.alt;
+    return "Slide " + (index + 1);
   });
   var activeIndex = 0;
   var announced = false;
@@ -1001,14 +1080,16 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
   }
 
   function nearestIndex() {
-    var center = track.scrollLeft + track.clientWidth / 2;
+    var viewStart = track.scrollLeft;
+    var viewEnd = viewStart + track.clientWidth;
     var closest = 0;
-    var closestDistance = Infinity;
+    var bestOverlap = -1;
     slides.forEach(function (slide, i) {
-      var slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
-      var distance = Math.abs(slideCenter - center);
-      if (distance < closestDistance) {
-        closestDistance = distance;
+      var start = slide.offsetLeft;
+      var end = start + slide.offsetWidth;
+      var overlap = Math.min(end, viewEnd) - Math.max(start, viewStart);
+      if (overlap > bestOverlap) {
+        bestOverlap = overlap;
         closest = i;
       }
     });
@@ -1055,7 +1136,7 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
     event.preventDefault();
     if (index === activeIndex) return;
     goTo(index);
-    if (event.target && event.target.hasAttribute("data-pillar-dot") && dots[index]) {
+    if (event.target && event.target.closest && event.target.closest("[data-carousel-dot], [data-pillar-dot]") && dots[index]) {
       dots[index].focus();
     }
   });
@@ -1112,6 +1193,9 @@ nav{position:sticky!important;top:0!important;z-index:50!important;backdrop-filt
   });
 
   setActive(0);
+  }
+
+  document.querySelectorAll("[data-home-carousel]").forEach(initCarousel);
 })();
 </script>
 
